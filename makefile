@@ -1,8 +1,9 @@
 install:
 	uv sync
+	pip install -r requirements.txt
 
 run:
-	echo run
+	python3 main.py
 
 debug:
 	echo debug
