@@ -1,5 +1,7 @@
 from sprites_base_class import Sprite
 from pathlib import Path
+from ghosts import Ghost
+
 
 class PacMan(Sprite):
     def __init__(self, lives: int,
@@ -7,6 +9,7 @@ class PacMan(Sprite):
                  alive: bool,
                  visible: bool,
                  dir: str,
+                 can_eat: bool,
                  next_dir: str,
                  respawn_coord: list[int, int],
                  super_power: bool,
@@ -14,6 +17,7 @@ class PacMan(Sprite):
                  ) -> None:
         super.__init__(lives, pos, alive,
                        visible, dir, next_dir,
+                       can_eat,
                        respawn_coord, super_power, sprite)
         self.lives: int = 3
         self.pos = pos
@@ -29,3 +33,11 @@ class PacMan(Sprite):
 
         if lives == 0:
             alive = False
+
+        if super_power is True:
+            can_eat = True
+
+        if self.pos == Ghost.pos:
+            has_eat = True
+        if has_eat is True:
+            super_power is True

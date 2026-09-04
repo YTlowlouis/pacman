@@ -8,7 +8,8 @@ class Ghost(Sprite):
                  visible: bool,
                  lives: int,
                  alive: bool,
+                 eatable: bool,
                  sprite: Path):
         super.__init__(pos, points_given,
                        visible, alive,
-                       lives, sprite)
+                       lives, eatable, sprite)
