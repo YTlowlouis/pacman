@@ -1,13 +1,18 @@
-from os import EX_CANTCREAT
+import json
+from enum import Enum
 
 from pydantic import ValidationError
-import json
 
 from src.models import Config, PointsConfig, LevelConfig
 
 
 class ConfigFileError(Exception):
     pass
+
+
+class State(Enum):
+    MENU = "menu"
+    PLAYING = "playing"
 
 
 class Engine:
@@ -73,4 +78,3 @@ class Engine:
             raise ConfigFileError(f"Invalid lives parameter: {e}")
 
         self.config = Config(levels=levels, points=points_conf, lives=lives)
-        print(self.config)
