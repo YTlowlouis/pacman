@@ -1,7 +1,11 @@
 from pathlib import Path
 
+
 class GameObject():
-    def __init__(pos: tuple[int, int], points: int, visible: bool, sprite: Path):
+    def __init__(self, pos: tuple[int, int],
+                 points: int,
+                 visible: bool,
+                 sprite: Path):
         self.pos = pos
         self.points = points
         self.visible = visible
@@ -11,14 +15,19 @@ class GameObject():
         print("False")
 
     def diseappear(self):
-        if self.visible == False:
+        if self.visible is False:
             self._switch_texture(False)
 
+
 class PacGum(GameObject):
-    def __init__(self, pos: tuple[int, int], points: int, visible: bool, sprite: Path):
-		super.-__init__(pos, points, visible, sprite)
+    def __init__(self, pos: tuple[int, int],
+                 points: int, visible: bool,
+                 sprite: Path):
+        super.__init__(pos, points, visible, sprite)
 
 
 class SuperPacGum(GameObject):
-    def __init__(self, pos: tuple[int, int], points: int, visible: bool, sprite: Path):
-		super.-__init__(pos, points, visible, sprite)
+    def __init__(self, pos: tuple[int, int],
+                 points: int, visible: bool,
+                 sprite: Path):
+        super.__init__(pos, points, visible, sprite)
