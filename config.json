@@ -1,0 +1,25 @@
+{
+	"levels": [
+		{
+			"id": 1,
+			"height": 10,
+			"width": 10,
+			"max_time": 50
+		},
+		{
+			"id": 2,
+			"height": 20,
+			"width": 20,
+			"max_time": 90
+		}
+	],
+
+	"lives": 3,
+
+	"points_per": {
+		"ghost": 200,
+		"super_pacgum": 50,
+		"pacgum": 10
+	}
+#fezoinfo
+}

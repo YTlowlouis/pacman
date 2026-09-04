@@ -1,9 +1,8 @@
 install:
 	uv sync
-	pip install -r requirements.txt
 
 run:
-	python3 main.py
+	uv run pacman.py config.json
 
 debug:
 	echo debug
@@ -14,7 +13,7 @@ clean:
 	rm -rf .mypy_cache .pytest_cache
 
 lint:
-	flake8 .
+	flake8 . --exclude=.venv
 	mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 lint-strict:
