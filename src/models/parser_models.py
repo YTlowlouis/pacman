@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator, ValidationError
 
 
 class LevelConfig(BaseModel):
@@ -11,9 +11,9 @@ class LevelConfig(BaseModel):
 
 
 class PointsConfig(BaseModel):
-    ghost: int
-    super_pacgum: int
-    pacgum: int
+    ghost: int = Field(gt=0)
+    super_pacgum: int = Field(gt=0)
+    pacgum: int = Field(gt=0)
 
 
 class Config(BaseModel):
@@ -21,3 +21,12 @@ class Config(BaseModel):
     points: PointsConfig
 
     lives: int = Field(gt=0, lt=20)
+
+    @model_validator(mode="after")
+    def validate_levels(self):
+        id_list = []
+        for level in self.levels:
+            id = level.get("id")
+            if id in id_list:
+                raise ValidationError("Two levels with same id")
+            id_list.append(id)
