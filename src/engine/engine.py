@@ -2,8 +2,11 @@ import json
 from enum import Enum
 
 from pydantic import ValidationError
+import pygame
 
 from src.models import Config, PointsConfig, LevelConfig
+from src.engine.scenes.scene_menu import MenuScene
+from src.engine.scenes.scene_baseclass import Scene
 
 
 class ConfigFileError(Exception):
@@ -19,6 +22,29 @@ class Engine:
     def __init__(self, config_file: str):
         self.config: Config
         self.load_conf(config_file)
+        pygame.init()
+        self.screen = pygame.display.set_mode((800, 900))
+        self.clock = pygame.time.Clock()
+        self.running = True
+        self.scene: Scene = MenuScene()
+
+    def run(self) -> None:
+        while self.running:
+            dt = self.clock.tick(60) / 1000.0
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                else:
+                    self.scene.handle_event(event)
+
+            self.scene.update(dt)
+            self.scene.draw(self.screen)
+            pygame.display.flip()
+        pygame.quit()
+
+    def change_scene(self, scene: Scene) -> None:
+        self.scene = scene
 
     def load_conf(self, config_file: str) -> None:
         try:
