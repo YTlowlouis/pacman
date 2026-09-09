@@ -31,10 +31,10 @@ class MenuScene(Scene):
                 print(self.cursor_pos)
                 if self.param_choice == 1:
                     self.engine.change_scene(self.engine.scenes["Score"])
-            elif event.key == pygame.K_ESCAPE or (
-                event.key == pygame.K_RETURN and self.param_choice == 3
-            ):
-                pygame.quit()
+                elif self.param_choice == 3:
+                    self.engine.running = False
+            elif event.key == pygame.K_ESCAPE:
+                self.engine.running = False
 
     def update(self, dt: float) -> None:
         pass
