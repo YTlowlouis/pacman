@@ -4,7 +4,8 @@ from src.engine.scenes.scene_baseclass import Scene
 
 
 class MenuScene(Scene):
-    def __init__(self):
+    def __init__(self, engine):
+        super().__init__(engine)
         self._init_fixed()
 
     def handle_event(self, event: pygame.event.Event) -> None:
@@ -23,6 +24,7 @@ class MenuScene(Scene):
                         self.param_list[self.cursor_pos_index][1][0] - 50,
                         self.param_list[self.cursor_pos_index][1][1] + 5,
                     )
+            elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
                 print(self.cursor_pos)
 
     def update(self, dt: float) -> None:

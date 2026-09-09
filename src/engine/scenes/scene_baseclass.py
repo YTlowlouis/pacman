@@ -1,9 +1,14 @@
 import pygame
 from abc import ABC, abstractmethod
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.engine.engine import Engine
+
 
 class Scene(ABC):
-    def __init__(self):
+    def __init__(self, engine: "Engine"):
         pass
 
     @abstractmethod

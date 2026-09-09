@@ -26,7 +26,8 @@ class Engine:
         self.screen = pygame.display.set_mode((800, 900))
         self.clock = pygame.time.Clock()
         self.running = True
-        self.scene: Scene = MenuScene()
+        self.scene: Scene = MenuScene(self)
+        self._next_scene: Scene | None = None
 
     def run(self) -> None:
         while self.running:
@@ -41,10 +42,15 @@ class Engine:
             self.scene.update(dt)
             self.scene.draw(self.screen)
             pygame.display.flip()
+
+            if self._next_scene is not None:
+                self.scene = self._next_scene
+                self._next_scene = None
+
         pygame.quit()
 
     def change_scene(self, scene: Scene) -> None:
-        self.scene = scene
+        self._next_scene = scene
 
     def load_conf(self, config_file: str) -> None:
         try:
