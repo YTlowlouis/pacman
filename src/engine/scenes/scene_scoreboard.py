@@ -13,10 +13,10 @@ class ScoreBoard(Scene):
     def __init__(self, engine):
         super().__init__(engine)
         scores: dict = {}
-        # self.loadscores()
+        self.loadscores()
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        if event == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.engine.change_scene(self.engine.scenes["Menu"])
 
     def update(self, dt: float) -> None:
@@ -29,12 +29,16 @@ class ScoreBoard(Scene):
         try:
             with open("scores.json", "r") as f:
                 content = json.load(f)
+        except json.decoder.JSONDecodeError:
+            raise ScoreFileError("Invalid json in score file")
         except FileNotFoundError:
             print("scores.json doesn't exist, creating .....")
             with open("scores.json", "w") as f:
                 f.write("")
         except PermissionError:
             raise ScoreFileError("No peermission to open score file")
+        except OSError as e:
+            raise ScoreFileError(f"Error while loading score file: {e}")
 
         with open("scores.json", "r") as f:
             content = json.load(f)

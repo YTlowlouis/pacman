@@ -4,17 +4,23 @@ import argparse
 
 class Main:
     def __init__(self):
-        parser = argparse.ArgumentParser(prog="pacman")
-        parser.add_argument("configfile", default="config.json")
-        args = parser.parse_args()
-        config_file = args.configfile
+        try:
+            parser = argparse.ArgumentParser(prog="pacman")
+            parser.add_argument("configfile", default="config.json")
+            args = parser.parse_args()
+            config_file = args.configfile
+        except Exception:
+            print("Erreur")
 
         try:
             engine = Engine(config_file)
         except ConfigFileError as e:
             print(e)
 
-        engine.run()
+        try:
+            engine.run()
+        except Exception:
+            print("test")
 
 
 if __name__ == "__main__":
