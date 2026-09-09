@@ -15,9 +15,13 @@ class ScoreBoard(Scene):
     def __init__(self, engine):
         super().__init__(engine)
         self.font = pygame.font.Font(None, 43)
+        self.font_title = pygame.font.Font(None, 70)
         self.scores: dict = {}
         self.loadscores()
         self.loadscores_text()
+        self.title_score_text = self.font_title.render(
+            "High Scores", True, (255, 255, 0)
+        )
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -29,17 +33,25 @@ class ScoreBoard(Scene):
     def draw(self, surface: pygame.Surface) -> None:
         surface.fill((0, 0, 0))
 
+        surface.blit(
+            self.title_score_text,
+            (
+                surface.get_width() // 2
+                - self.title_score_text.get_width() // 2,
+                100,
+            ),
+        )
         self._draw_10_scores(surface)
 
     def _draw_10_scores(self, surface: pygame.Surface) -> None:
-        count = 0
-        base_coords = (500, 500)
+        center_x = surface.get_width() // 2
+        base_y = 200
         for count, text in enumerate(self.fonted_scores):
             if count == 10:
                 break
             surface.blit(
                 text,
-                (base_coords[0], base_coords[1] + count * 50),
+                (center_x - text.get_width() // 2, base_y + count * 50),
             )
 
     def loadscores(self):
@@ -63,7 +75,7 @@ class ScoreBoard(Scene):
             self.scores = {
                 player: score
                 for player, score in sorted(
-                    self.scores.items(), key=lambda item: [1]
+                    self.scores.items(), key=lambda item: item[1], reverse=True
                 )
             }
 
