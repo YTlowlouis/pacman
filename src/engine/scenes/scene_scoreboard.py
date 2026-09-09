@@ -1,3 +1,5 @@
+from os import truncate
+
 import pygame
 
 import json
@@ -12,8 +14,10 @@ class ScoreFileError(Exception):
 class ScoreBoard(Scene):
     def __init__(self, engine):
         super().__init__(engine)
-        scores: dict = {}
+        self.font = pygame.font.Font(None, 43)
+        self.scores: dict = {}
         self.loadscores()
+        self.loadscores_text()
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -24,6 +28,19 @@ class ScoreBoard(Scene):
 
     def draw(self, surface: pygame.Surface) -> None:
         surface.fill((0, 0, 0))
+
+        self._draw_10_scores(surface)
+
+    def _draw_10_scores(self, surface: pygame.Surface) -> None:
+        count = 0
+        base_coords = (500, 500)
+        for count, text in enumerate(self.fonted_scores):
+            if count == 10:
+                break
+            surface.blit(
+                text,
+                (base_coords[0], base_coords[1] + count * 50),
+            )
 
     def loadscores(self):
         try:
@@ -49,3 +66,9 @@ class ScoreBoard(Scene):
                     self.scores.items(), key=lambda item: [1]
                 )
             }
+
+    def loadscores_text(self) -> None:
+        self.fonted_scores = [
+            self.font.render(f"{key}: {val}", True, (255, 255, 0))
+            for key, val in self.scores.items()
+        ]
