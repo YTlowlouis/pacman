@@ -7,12 +7,14 @@ class MenuScene(Scene):
     def __init__(self, engine):
         super().__init__(engine)
         self._init_fixed()
+        self.param_choice = 0
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_DOWN:
                 if self.cursor_pos_index < len(self.param_list) - 1:
                     self.cursor_pos_index += 1
+                    self.param_choice += 1
                     self.cursor_pos = (
                         self.param_list[self.cursor_pos_index][1][0] - 50,
                         self.param_list[self.cursor_pos_index][1][1] + 5,
@@ -20,12 +22,15 @@ class MenuScene(Scene):
             elif event.key == pygame.K_UP:
                 if self.cursor_pos_index > 0:
                     self.cursor_pos_index -= 1
+                    self.param_choice -= 1
                     self.cursor_pos = (
                         self.param_list[self.cursor_pos_index][1][0] - 50,
                         self.param_list[self.cursor_pos_index][1][1] + 5,
                     )
             elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
                 print(self.cursor_pos)
+                if self.param_choice == 1:
+                    self.engine.change_scene(self.engine.scenes["Score"])
 
     def update(self, dt: float) -> None:
         pass

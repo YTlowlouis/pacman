@@ -1,5 +1,5 @@
 import json
-from enum import Enum
+from typing_extensions import get_annotations
 
 from pydantic import ValidationError
 import pygame
@@ -7,15 +7,14 @@ import pygame
 from src.models import Config, PointsConfig, LevelConfig
 from src.engine.scenes.scene_menu import MenuScene
 from src.engine.scenes.scene_baseclass import Scene
+from src.engine.scenes.scene_scoreboard import ScoreBoard
+from src.engine.scenes.scene_gameover import GameOverScene
+from src.engine.scenes.scene_running import RunningScene
+from src.engine.scenes.scene_pause import PauseScene
 
 
 class ConfigFileError(Exception):
     pass
-
-
-class State(Enum):
-    MENU = "menu"
-    PLAYING = "playing"
 
 
 class Engine:
@@ -27,6 +26,13 @@ class Engine:
         self.clock = pygame.time.Clock()
         self.running = True
         self.scene: Scene = MenuScene(self)
+        self.scenes = {
+            "Menu": self.scene,
+            "Score": ScoreBoard(self),
+            "GameOver": GameOverScene(),
+            "Running": RunningScene(),
+            "Pause": PauseScene(),
+        }
         self._next_scene: Scene | None = None
 
     def run(self) -> None:
