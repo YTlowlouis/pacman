@@ -1,16 +1,16 @@
 import json
-from typing_extensions import get_annotations
-
+from pathlib import Path
 from pydantic import ValidationError
 import pygame
 
-from src.models import Config, PointsConfig, LevelConfig
+from src.models import Config, PointsConfig, LevelConfig, PacManConfig
 from src.engine.scenes.scene_menu import MenuScene
 from src.engine.scenes.scene_baseclass import Scene
 from src.engine.scenes.scene_scoreboard import ScoreBoard
 from src.engine.scenes.scene_gameover import GameOverScene
 from src.engine.scenes.scene_running import RunningScene
 from src.engine.scenes.scene_pause import PauseScene
+from src.engine.wave_manager import WaveManager
 
 
 class ConfigFileError(Exception):
@@ -19,6 +19,7 @@ class ConfigFileError(Exception):
 
 class Engine:
     def __init__(self, config_file: str):
+        self.wave_manager = WaveManager()
         self.config: Config
         self.load_conf(config_file)
         pygame.init()
@@ -30,11 +31,10 @@ class Engine:
             "Menu": self.scene,
             "Score": ScoreBoard(self),
             "GameOver": GameOverScene(),
-            "Running": RunningScene(),
+            "Running": RunningScene(self),
             "Pause": PauseScene(),
         }
         self._next_scene: Scene | None = None
-
 
     def run(self) -> None:
         while self.running:
@@ -60,6 +60,7 @@ class Engine:
         self._next_scene = scene
 
     def load_conf(self, config_file: str) -> None:
+        # 1. Lecture du fichier
         try:
             with open(config_file, "r") as file:
                 text = "".join(
@@ -77,6 +78,7 @@ class Engine:
                 f"Error open or reading file: {config_file}, {e}"
             )
 
+        # 2. Parsing de la configuration des points
         try:
             points_conf = PointsConfig(
                 ghost=options["points_per"]["ghost"],
@@ -85,13 +87,14 @@ class Engine:
             )
         except KeyError as e:
             raise ConfigFileError(
-                f"missing option in config file for points, {e}"
+                f"Missing option in config file for points: {e}"
             )
         except ValidationError as e:
             raise ConfigFileError(
                 f"Invalid option in config file for points: {e.errors()}"
             )
 
+        # 3. Parsing des niveaux
         levels = []
         try:
             for level in options["levels"]:
@@ -104,11 +107,13 @@ class Engine:
                     )
                 )
         except KeyError as e:
-            raise ConfigFileError(f"Missing option in level config, : {e}")
+            raise ConfigFileError(f"Missing option in level config: {e}")
         except ValidationError as e:
             raise ConfigFileError(
                 f"Invalid option in config file for levels: {e.errors()}"
             )
+
+        # 4. Parsing des vies
         try:
             lives = options["lives"]
         except KeyError:
@@ -116,4 +121,25 @@ class Engine:
         except ValidationError as e:
             raise ConfigFileError(f"Invalid lives parameter: {e}")
 
-        self.config = Config(levels=levels, points=points_conf, lives=lives)
+        # 5. Parsing de la configuration PacMan
+        try:
+            pacman_conf = PacManConfig(
+                pos=tuple(options["pacman"]["pos"]),
+                dir=options["pacman"]["dir"],
+                next_dir=options["pacman"]["next_dir"],
+                sprite=Path(options["pacman"]["sprite"]),
+            )
+        except KeyError as e:
+            raise ConfigFileError(f"Missing option in pacman config: {e}")
+        except ValidationError as e:
+            raise ConfigFileError(
+                f"Invalid option in pacman config: {e.errors()}"
+            )
+
+        # 6. Instanciation UNIQUE du modèle Config global
+        self.config = Config(
+            levels=levels,
+            points=points_conf,
+            lives=lives,
+            pacman=pacman_conf,
+        )
