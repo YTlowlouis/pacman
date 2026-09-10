@@ -18,6 +18,8 @@ class Main:
         except ScoreFileError as e:
             print(e)
 
+        engine.run()
+
 
 if __name__ == "__main__":
     main = Main()
