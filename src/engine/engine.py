@@ -60,7 +60,6 @@ class Engine:
         self._next_scene = scene
 
     def load_conf(self, config_file: str) -> None:
-        # 1. Lecture du fichier
         try:
             with open(config_file, "r") as file:
                 text = "".join(
@@ -78,7 +77,6 @@ class Engine:
                 f"Error open or reading file: {config_file}, {e}"
             )
 
-        # 2. Parsing de la configuration des points
         try:
             points_conf = PointsConfig(
                 ghost=options["points_per"]["ghost"],
@@ -94,7 +92,6 @@ class Engine:
                 f"Invalid option in config file for points: {e.errors()}"
             )
 
-        # 3. Parsing des niveaux
         levels = []
         try:
             for level in options["levels"]:
@@ -113,7 +110,6 @@ class Engine:
                 f"Invalid option in config file for levels: {e.errors()}"
             )
 
-        # 4. Parsing des vies
         try:
             lives = options["lives"]
         except KeyError:
@@ -121,7 +117,6 @@ class Engine:
         except ValidationError as e:
             raise ConfigFileError(f"Invalid lives parameter: {e}")
 
-        # 5. Parsing de la configuration PacMan
         try:
             pacman_conf = PacManConfig(
                 pos=tuple(options["pacman"]["pos"]),
@@ -136,7 +131,6 @@ class Engine:
                 f"Invalid option in pacman config: {e.errors()}"
             )
 
-        # 6. Instanciation UNIQUE du modèle Config global
         self.config = Config(
             levels=levels,
             points=points_conf,

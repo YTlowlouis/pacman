@@ -8,6 +8,8 @@ class PauseScene(Scene):
         pass
 
     def handle_event(self, event: pygame.event.Event) -> None:
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            self.engine.change_scene(self.engine.scenes["Menu"])
         pass
 
     def update(self, dt: float) -> None:
