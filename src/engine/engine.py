@@ -1,5 +1,5 @@
 import json
-from enum import Enum
+from typing_extensions import get_annotations
 
 from pydantic import ValidationError
 import pygame
@@ -7,15 +7,14 @@ import pygame
 from src.models import Config, PointsConfig, LevelConfig
 from src.engine.scenes.scene_menu import MenuScene
 from src.engine.scenes.scene_baseclass import Scene
+from src.engine.scenes.scene_scoreboard import ScoreBoard
+from src.engine.scenes.scene_gameover import GameOverScene
+from src.engine.scenes.scene_running import RunningScene
+from src.engine.scenes.scene_pause import PauseScene
 
 
 class ConfigFileError(Exception):
     pass
-
-
-class State(Enum):
-    MENU = "menu"
-    PLAYING = "playing"
 
 
 class Engine:
@@ -26,7 +25,15 @@ class Engine:
         self.screen = pygame.display.set_mode((800, 900))
         self.clock = pygame.time.Clock()
         self.running = True
-        self.scene: Scene = MenuScene()
+        self.scene: Scene = MenuScene(self)
+        self.scenes = {
+            "Menu": self.scene,
+            "Score": ScoreBoard(self),
+            "GameOver": GameOverScene(),
+            "Running": RunningScene(),
+            "Pause": PauseScene(),
+        self._next_scene: Scene | None = None
+
 
     def run(self) -> None:
         while self.running:
@@ -41,10 +48,15 @@ class Engine:
             self.scene.update(dt)
             self.scene.draw(self.screen)
             pygame.display.flip()
+
+            if self._next_scene is not None:
+                self.scene = self._next_scene
+                self._next_scene = None
+
         pygame.quit()
 
     def change_scene(self, scene: Scene) -> None:
-        self.scene = scene
+        self._next_scene = scene
 
     def load_conf(self, config_file: str) -> None:
         try:
