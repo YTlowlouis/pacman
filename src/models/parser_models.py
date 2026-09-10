@@ -26,7 +26,8 @@ class Config(BaseModel):
     def validate_levels(self):
         id_list = []
         for level in self.levels:
-            id = level.get("id")
+            id = level.id
             if id in id_list:
                 raise ValidationError("Two levels with same id")
             id_list.append(id)
+        return self
