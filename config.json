@@ -16,6 +16,13 @@
 
 	"lives": 3,
 
+	"pacman": {
+		"pos": [1, 1],
+		"dir": "right",
+		"next_dir": "right",
+		"sprite": "src/assets/pacman.png"
+	},
+
 	"points_per": {
 		"ghost": 200,
 		"super_pacgum": 50,

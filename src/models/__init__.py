@@ -1,3 +1,3 @@
-from src.models.parser_models import LevelConfig, PointsConfig, Config
+from src.models.models import Config, LevelConfig, PacManConfig, PointsConfig
 
-__all__ = ["LevelConfig", "PointsConfig", "Config"]
+__all__ = ["Config", "LevelConfig", "PacManConfig", "PointsConfig"]

@@ -1,16 +1,16 @@
 import json
-from typing_extensions import get_annotations
-
+from pathlib import Path
 from pydantic import ValidationError
 import pygame
 
-from src.models import Config, PointsConfig, LevelConfig
+from src.models import Config, PointsConfig, LevelConfig, PacManConfig
 from src.engine.scenes.scene_menu import MenuScene
 from src.engine.scenes.scene_baseclass import Scene
 from src.engine.scenes.scene_scoreboard import ScoreBoard
 from src.engine.scenes.scene_gameover import GameOverScene
 from src.engine.scenes.scene_running import RunningScene
 from src.engine.scenes.scene_pause import PauseScene
+from src.engine.wave_manager import WaveManager
 
 
 class ConfigFileError(Exception):
@@ -19,6 +19,7 @@ class ConfigFileError(Exception):
 
 class Engine:
     def __init__(self, config_file: str):
+        self.wave_manager = WaveManager()
         self.config: Config
         self.load_conf(config_file)
         pygame.init()
@@ -30,11 +31,10 @@ class Engine:
             "Menu": self.scene,
             "Score": ScoreBoard(self),
             "GameOver": GameOverScene(),
-            "Running": RunningScene(),
+            "Running": RunningScene(self),
             "Pause": PauseScene(),
         }
         self._next_scene: Scene | None = None
-
 
     def run(self) -> None:
         while self.running:
@@ -85,7 +85,7 @@ class Engine:
             )
         except KeyError as e:
             raise ConfigFileError(
-                f"missing option in config file for points, {e}"
+                f"Missing option in config file for points: {e}"
             )
         except ValidationError as e:
             raise ConfigFileError(
@@ -104,11 +104,12 @@ class Engine:
                     )
                 )
         except KeyError as e:
-            raise ConfigFileError(f"Missing option in level config, : {e}")
+            raise ConfigFileError(f"Missing option in level config: {e}")
         except ValidationError as e:
             raise ConfigFileError(
                 f"Invalid option in config file for levels: {e.errors()}"
             )
+
         try:
             lives = options["lives"]
         except KeyError:
@@ -116,4 +117,23 @@ class Engine:
         except ValidationError as e:
             raise ConfigFileError(f"Invalid lives parameter: {e}")
 
-        self.config = Config(levels=levels, points=points_conf, lives=lives)
+        try:
+            pacman_conf = PacManConfig(
+                pos=tuple(options["pacman"]["pos"]),
+                dir=options["pacman"]["dir"],
+                next_dir=options["pacman"]["next_dir"],
+                sprite=Path(options["pacman"]["sprite"]),
+            )
+        except KeyError as e:
+            raise ConfigFileError(f"Missing option in pacman config: {e}")
+        except ValidationError as e:
+            raise ConfigFileError(
+                f"Invalid option in pacman config: {e.errors()}"
+            )
+
+        self.config = Config(
+            levels=levels,
+            points=points_conf,
+            lives=lives,
+            pacman=pacman_conf,
+        )
