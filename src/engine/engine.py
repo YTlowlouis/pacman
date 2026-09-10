@@ -32,6 +32,7 @@ class Engine:
             "GameOver": GameOverScene(),
             "Running": RunningScene(),
             "Pause": PauseScene(),
+        }
         self._next_scene: Scene | None = None
 
 
