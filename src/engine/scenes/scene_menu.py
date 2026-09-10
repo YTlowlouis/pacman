@@ -31,6 +31,8 @@ class MenuScene(Scene):
                 print(self.cursor_pos)
                 if self.param_choice == 1:
                     self.engine.change_scene(self.engine.scenes["Score"])
+                if self.param_choice == 3:
+                    pygame.quit()
 
     def update(self, dt: float) -> None:
         pass
