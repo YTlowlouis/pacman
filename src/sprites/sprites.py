@@ -3,10 +3,14 @@ from src.sprites.ghost import Ghost, GhostState
 
 
 class Blinky(Ghost):
-    def __init__(self, x: int, y: int, sprite: Path, tile_size: int = 32) -> None:
-        super().__init__(x, y, 200, True, 1, True, False, sprite, (255, 0, 0), (17, -2), tile_size)
+    def __init__(self, x: int, y: int, sprite: Path,
+                 tile_size: int = 32) -> None:
+        super().__init__(x, y, 200, True, 1, True, False,
+                         sprite, (255, 0, 0), (17, -2),
+                         tile_size)
 
-    def update_target(self, pacman_pos: tuple[int, int], pacman_dir: tuple[int, int]) -> None:
+    def update_target(self, pacman_pos: tuple[int, int],
+                      pacman_dir: tuple[int, int]) -> None:
         if self.state == GhostState.CHASE:
             self.target_tile = pacman_pos
         else:
@@ -14,10 +18,14 @@ class Blinky(Ghost):
 
 
 class Pinky(Ghost):
-    def __init__(self, x: int, y: int, sprite: Path, tile_size: int = 32) -> None:
-        super().__init__(x, y, 200, True, 1, True, False, sprite, (255, 184, 255), (1, -2), tile_size)
+    def __init__(self, x: int, y: int, sprite: Path,
+                 tile_size: int = 32) -> None:
+        super().__init__(x, y, 200, True, 1, True, False,
+                         sprite, (255, 184, 255), (1, -2),
+                         tile_size)
 
-    def update_target(self, pacman_pos: tuple[int, int], pacman_dir: tuple[int, int]) -> None:
+    def update_target(self, pacman_pos: tuple[int, int],
+                      pacman_dir: tuple[int, int]) -> None:
         if self.state == GhostState.CHASE:
             px, py = pacman_pos
             p_dx, p_dy = pacman_dir
@@ -27,11 +35,16 @@ class Pinky(Ghost):
 
 
 class Inky(Ghost):
-    def __init__(self, x: int, y: int, sprite: Path, blinky_ref: Ghost | None = None, tile_size: int = 32) -> None:
-        super().__init__(x, y, 200, True, 1, True, False, sprite, (0, 255, 255), (18, 22), tile_size)
+    def __init__(self, x: int, y: int, sprite: Path,
+                 blinky_ref: Ghost | None = None,
+                 tile_size: int = 32) -> None:
+        super().__init__(x, y, 200, True, 1,
+                         True, False, sprite, (0, 255, 255),
+                         (18, 22), tile_size)
         self.blinky_ref = blinky_ref
 
-    def update_target(self, pacman_pos: tuple[int, int], pacman_dir: tuple[int, int]) -> None:
+    def update_target(self, pacman_pos: tuple[int, int],
+                      pacman_dir: tuple[int, int]) -> None:
         if self.state == GhostState.CHASE and self.blinky_ref:
             px, py = pacman_pos
             p_dx, p_dy = pacman_dir
@@ -46,10 +59,14 @@ class Inky(Ghost):
 
 
 class Clyde(Ghost):
-    def __init__(self, x: int, y: int, sprite: Path, tile_size: int = 32) -> None:
-        super().__init__(x, y, 200, True, 1, True, False, sprite, (255, 184, 82), (0, 22), tile_size)
+    def __init__(self, x: int, y: int, sprite: Path,
+                 tile_size: int = 32) -> None:
+        super().__init__(x, y, 200, True, 1, True, False,
+                         sprite, (255, 184, 82), (0, 22),
+                         tile_size)
 
-    def update_target(self, pacman_pos: tuple[int, int], pacman_dir: tuple[int, int]) -> None:
+    def update_target(self, pacman_pos: tuple[int, int],
+                      pacman_dir: tuple[int, int]) -> None:
         if self.state == GhostState.CHASE:
             px, py = pacman_pos
             dist_sq = (self.grid_x - px) ** 2 + (self.grid_y - py) ** 2

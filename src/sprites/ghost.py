@@ -15,7 +15,9 @@ class Ghost(Sprite):
                  lives: int, alive: bool, eatable: bool, sprite: Path,
                  color: tuple[int, int, int], scatter_target: tuple[int, int],
                  tile_size: int) -> None:
-        super().__init__((x, y), points_given, visible, sprite, lives, alive, "",
+        super().__init__((x, y), points_given,
+                         visible, sprite, lives,
+                         alive, "",
                          False, eatable, "", (x, y), False)
         self.color = color
         self.scatter_target = scatter_target
@@ -25,5 +27,6 @@ class Ghost(Sprite):
         self.grid_y = y
         self.target_tile = scatter_target
 
-    def update_target(self, pacman_pos: tuple[int, int], pacman_dir: tuple[int, int]) -> None:
+    def update_target(self, pacman_pos: tuple[int, int],
+                      pacman_dir: tuple[int, int]) -> None:
         pass

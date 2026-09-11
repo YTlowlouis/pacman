@@ -1,5 +1,6 @@
 from src.sprites.ghost import GhostState, Ghost
 
+
 class WaveManager:
     def __init__(self) -> None:
         self.waves = [
@@ -26,7 +27,7 @@ class WaveManager:
         if self.timer >= wave_duration:
             self.timer = 0.0
             self.current_wave_index += 1
-            
+
             if self.current_wave_index < len(self.waves):
                 self.current_state = self.waves[self.current_wave_index][0]
                 self._apply_state_to_ghosts(ghosts)

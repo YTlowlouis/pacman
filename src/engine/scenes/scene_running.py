@@ -36,7 +36,10 @@ class RunningScene(Scene):
         self.inky = Inky(7, 5, sprite_path, blinky_ref=self.blinky)
         self.clyde = Clyde(8, 5, sprite_path)
 
-        self.ghosts: list[Ghost] = [self.blinky, self.pinky, self.inky, self.clyde]
+        self.ghosts: list[Ghost] = [self.blinky,
+                                    self.pinky,
+                                    self.inky,
+                                    self.clyde]
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -44,9 +47,7 @@ class RunningScene(Scene):
 
     def update(self, dt: float) -> None:
         self.engine.wave_manager.update(dt, self.ghosts)
-
         pacman_pos = self.pacman.pos
-        
         dir_vectors = {
             "up": (0, -1),
             "down": (0, 1),

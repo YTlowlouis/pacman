@@ -1,5 +1,4 @@
 import pygame
-
 from src.engine.scenes.scene_baseclass import Scene
 
 
@@ -29,20 +28,18 @@ class MenuScene(Scene):
                     )
             elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
                 print(self.cursor_pos)
-                if self.param_choice == 0:  # PLAY
+                if self.param_choice == 0:
                     self.engine.change_scene(self.engine.scenes["Running"])
-                elif self.param_choice == 1:  # SCORE BOARD
+                elif self.param_choice == 1:
                     self.engine.change_scene(self.engine.scenes["Score"])
-                elif self.param_choice == 3:  # EXIT
+                elif self.param_choice == 3:
                     pygame.quit()
-
 
     def update(self, dt: float) -> None:
         pass
 
     def draw(self, surface: pygame.Surface) -> None:
         surface.fill((0, 0, 0))
-
         surface.blit(self.title, self.title_pos)
         surface.blit(self.play_text, self.param_list[0][1])
         surface.blit(self.score_board_text, self.param_list[1][1])

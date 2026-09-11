@@ -1,9 +1,5 @@
-from os import truncate
-
 import pygame
-
 import json
-
 from src.engine.scenes.scene_baseclass import Scene
 
 
