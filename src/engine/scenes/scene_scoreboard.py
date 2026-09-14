@@ -1,10 +1,12 @@
 from os import truncate
 
 import pygame
+from pydantic import ValidationError
 
 import json
 
 from src.engine.scenes.scene_baseclass import Scene
+from src.models.scoreboard_models import Score
 
 
 class ScoreFileError(Exception):
@@ -72,6 +74,12 @@ class ScoreBoard(Scene):
         with open("scores.json", "r") as f:
             content = json.load(f)
             self.scores = {player: score for player, score in content.items()}
+            try:
+                for player, score in self.scores.items():
+                    score = Score(name=player, score=score)
+            except ValidationError as e:
+                raise ScoreFileError(e)
+
             self.scores = {
                 player: score
                 for player, score in sorted(
