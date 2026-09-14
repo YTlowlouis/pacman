@@ -92,6 +92,10 @@ class RunningScene(Scene):
                 self.engine.change_scene(self.engine.scenes["Pause"])
             elif event.key == pygame.KMOD_CTRL:
                 pass
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                pause_scene = self.engine.scenes["Pause"]
+                pause_scene.background_snapshot = self.engine.screen.copy()
+                self.engine.change_scene(pause_scene)
 
     def draw(self, surface: pygame.Surface) -> None:
         if self.layer is None:
