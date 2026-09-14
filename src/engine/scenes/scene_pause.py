@@ -1,10 +1,9 @@
 import pygame
-
 from src.engine.scenes.scene_baseclass import Scene
 
 
 class PauseScene(Scene):
-    def __init__(self):
+    def __init__(self, engine):
         pass
 
     def handle_event(self, event: pygame.event.Event) -> None:
@@ -16,4 +15,4 @@ class PauseScene(Scene):
         pass
 
     def draw(self, surface: pygame.Surface) -> None:
-        pass
+        surface.fill((0, 0, 0))
