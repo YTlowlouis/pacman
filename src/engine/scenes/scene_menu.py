@@ -35,7 +35,6 @@ class MenuScene(Scene):
                 elif self.param_choice == 3:
                     self.engine.running = False
 
-
     def update(self, dt: float) -> None:
         pass
 

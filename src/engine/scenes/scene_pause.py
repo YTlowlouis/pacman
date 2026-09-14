@@ -8,9 +8,12 @@ class PauseScene(Scene):
         self.font_title = pygame.font.Font(None, 74)
         self.font_text = pygame.font.Font(None, 36)
 
-        self.title_surface = self.font_title.render("PAUSED", True, (255, 255, 0))
-        self.resume_text = self.font_text.render("Press ESC to Resume", True, (255, 255, 255))
-        self.menu_text = self.font_text.render("Press M for Main Menu", True, (200, 200, 200))
+        self.title_surface = self.font_title.render("PAUSED",
+                                                    True, (255, 255, 0))
+        self.resume_text = self.font_text.render("Press ESC to Resume",
+                                                 True, (255, 255, 255))
+        self.menu_text = self.font_text.render("Press M for Main Menu",
+                                               True, (200, 200, 200))
 
         self.background_snapshot: pygame.Surface | None = None
 
@@ -35,9 +38,12 @@ class PauseScene(Scene):
         center_x = surface.get_width() // 2
         center_y = surface.get_height() // 2
 
-        title_pos = (center_x - self.title_surface.get_width() // 2, center_y - 100)
-        resume_pos = (center_x - self.resume_text.get_width() // 2, center_y + 20)
-        menu_pos = (center_x - self.menu_text.get_width() // 2, center_y + 70)
+        title_pos = (center_x - self.title_surface.get_width() // 2,
+                     center_y - 100)
+        resume_pos = (center_x - self.resume_text.get_width() // 2,
+                      center_y + 20)
+        menu_pos = (center_x - self.menu_text.get_width() // 2,
+                    center_y + 70)
 
         surface.blit(self.title_surface, title_pos)
         surface.blit(self.resume_text, resume_pos)
