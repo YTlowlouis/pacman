@@ -28,12 +28,13 @@ class MenuScene(Scene):
                         self.param_list[self.cursor_pos_index][1][1] + 5,
                     )
             elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
-                if self.param_choice == 1:
+                if self.param_choice == 0:  # PLAY
+                    self.engine.change_scene(self.engine.scenes["Running"])
+                elif self.param_choice == 1:  # SCORE BOARD
                     self.engine.change_scene(self.engine.scenes["Score"])
-                elif self.param_choice == 3:
-                    self.engine.running = False
-            elif event.key == pygame.K_ESCAPE:
-                self.engine.running = False
+                elif self.param_choice == 3:  # EXIT
+                    pygame.quit()
+
 
     def update(self, dt: float) -> None:
         pass

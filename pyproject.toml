@@ -10,6 +10,7 @@ dependencies = [
     "pathlib>=1.0.1",
     "pydantic>=2.13.5",
     "pygame-ce>=2.5.8",
+    "readchar>=4.2.2"
 ]
 
 [tool.uv.sources]
