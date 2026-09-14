@@ -30,7 +30,7 @@ class Engine:
             "Menu": self.scene,
             "Score": ScoreBoard(self),
             "GameOver": GameOverScene(),
-            "Running": RunningScene(),
+            "Running": RunningScene(self),
             "Pause": PauseScene(),
         }
         self._next_scene: Scene | None = None

@@ -28,6 +28,8 @@ class MenuScene(Scene):
                         self.param_list[self.cursor_pos_index][1][1] + 5,
                     )
             elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+                if self.param_choice == 0:
+                    self.engine.change_scene(self.engine.scenes["Running"])
                 if self.param_choice == 1:
                     self.engine.change_scene(self.engine.scenes["Score"])
                 elif self.param_choice == 3:
