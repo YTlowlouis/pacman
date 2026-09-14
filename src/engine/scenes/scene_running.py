@@ -10,7 +10,6 @@ from src.sprites.pacman import PacMan
 
 
 class RunningScene(Scene):
-<<<<<<< HEAD
     WALL_COLOR = (33, 33, 222)
     BG_COLOR = (0, 0, 0)
     MARGIN = 20
@@ -94,6 +93,16 @@ class RunningScene(Scene):
             elif event.key == pygame.KMOD_CTRL:
                 pass
 
+    def draw(self, surface: pygame.Surface) -> None:
+        if self.layer is None:
+            self.layer = self._build_layer(surface.get_size())
+        surface.fill(self.BG_COLOR)
+        surface.blit(self.layer, (0, 0))
+
+    def update(self, dt: float) -> None:
+        pass
+
+
 """
     def __init__(self, engine) -> None:
         super().__init__(engine)
@@ -157,3 +166,4 @@ class RunningScene(Scene):
 >>>>>>> cea1237d39beb069e1b0da799f99925d60939baf
 
 """
+
