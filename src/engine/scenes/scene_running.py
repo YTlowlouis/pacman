@@ -130,7 +130,7 @@ class RunningScene(Scene):
             ).convert_alpha()
 
     def _scale_ghost_images(self) -> None:
-        size = (self.cell_size, self.cell_size)
+        size = (self.cell_size - 15, self.cell_size - 15)
         for ghost, image in self.ghost_sprites.items():
             self.ghost_images[ghost] = pygame.transform.smoothscale(
                 image, size
