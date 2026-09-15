@@ -1,3 +1,4 @@
+from pathlib import Path
 import pygame
 from mazegenerator import MazeGenerator
 from src.engine.scenes.scene_baseclass import Scene
@@ -23,9 +24,10 @@ class RunningScene(Scene):
         self.origin = (0, 0)
         self.layer: pygame.Surface | None = None
 
-        self.ghosts: list[Ghost]
+        self.ghosts: list[Ghost] = []
+        self.ghost_sprites: dict[Ghost, pygame.Surface] = {}
+        self.ghost_images: dict[Ghost, pygame.Surface] = {}
         self._init_ghost()
-
 
     def _build_layer(self, size: tuple[int, int]) -> pygame.Surface:
         grid = self.maze.maze
@@ -92,11 +94,9 @@ class RunningScene(Scene):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_r:
                 self._generate_new_maze()
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            if event.key == pygame.K_ESCAPE:
                 self.engine.change_scene(self.engine.scenes["Pause"])
-            elif event.key == pygame.KMOD_CTRL:
-                pass
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            if event.key == pygame.K_ESCAPE:
                 pause_scene = self.engine.scenes["Pause"]
                 pause_scene.background_snapshot = self.engine.screen.copy()
                 self.engine.change_scene(pause_scene)
@@ -104,29 +104,37 @@ class RunningScene(Scene):
     def draw(self, surface: pygame.Surface) -> None:
         if self.layer is None:
             self.layer = self._build_layer(surface.get_size())
+            self._scale_ghost_images()
         surface.fill(self.BG_COLOR)
         surface.blit(self.layer, (0, 0))
         self.draw_ghost(surface)
 
     def draw_ghost(self, surface: pygame.Surface) -> None:
+        ox, oy = self.origin
+        c = self.cell_size
         for ghost in self.ghosts:
-            surface.blit(self.pinky_image, (self.origin[0] + self.pinky.pos[0] * self.cell_size, self.origin[1] + self.pinky.pos[1] * self.cell_size))
+            x, y = ghost.pos
+            surface.blit(self.ghost_images[ghost], (ox + x * c, oy + y * c))
 
     def _init_ghost(self) -> None:
-        pinky_spawn: tuple[int, int] = (0, 0)
-        inky_spawn: tuple[int, int] = (0, self.maze_size[1])
-        blinky_spawn: tuple[int, int] = (self.maze_size[0], 0)
-        clyde_spawn: tuple[int, int] = (self.maze_size[0], self.maze_size[1])
-        self.pinky = Pinky((0, 0), "src/assets/Pinky.png", pinky_spawn, False)
-        self.inky = Inky((0, self.maze_size[1]), "src/assets/Inky.png", inky_spawn, False)
-        self.blinky = Blinky((self.maze_size[0], 0), "src/assets/Blinky.png", blinky_spawn, False)
-        self.clyde = Clyde((self.maze_size[0], self.maze_size[1]), "src/assets/Clyde.png", clyde_spawn, False)
-        self.ghosts.append(self.pinky, self.inky, self.blinky, self.clyde)
+        max_x, max_y = self.maze_size[0] - 1, self.maze_size[1] - 1
+        blinky = Blinky((max_x, 0), Path("src/assets/Blinky.png"))
+        pinky = Pinky((0, 0), Path("src/assets/Pinky.png"))
+        inky = Inky((0, max_y), Path("src/assets/Inky.png"), blinky)
+        clyde = Clyde((max_x, max_y), Path("src/assets/Clyde.png"))
+        self.ghosts = [blinky, pinky, inky, clyde]
 
-        self.pinky_image = pygame.image.load(self.pinky.sprite).convert_alpha()
-        self.inky_image = pygame.image.load(self.inky.sprite).convert_alpha()
-        self.blinky_image = pygame.image.load(self.blinky.sprite).convert_alpha()
-        self.clyde_image = pygame.image.load(self.clyde.sprite).convert_alpha()
+        for ghost in self.ghosts:
+            self.ghost_sprites[ghost] = pygame.image.load(
+                ghost.sprite
+            ).convert_alpha()
+
+    def _scale_ghost_images(self) -> None:
+        size = (self.cell_size, self.cell_size)
+        for ghost, image in self.ghost_sprites.items():
+            self.ghost_images[ghost] = pygame.transform.smoothscale(
+                image, size
+            )
 
     def update(self, dt: float) -> None:
         pass

@@ -9,9 +9,9 @@ class PacMan(Sprite):
                  next_dir: str,
                  respawn_coord: tuple[int, int], super_power: bool,
                  sprite: Path) -> None:
-        super().__init__(pos, 0, visible, sprite, lives, alive, dir,
-                         can_eat, False, next_dir, respawn_coord,
-                         super_power)
+        super().__init__(pos, visible, sprite, lives, alive, dir,
+                         can_eat, False, respawn_coord, super_power)
+        self.next_dir = next_dir
         self.points: int = 0
         self.VALID_DIRECTIONS = {"up", "down", "right", "left"}
 

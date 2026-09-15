@@ -16,8 +16,8 @@ class Ghost(Sprite):
                  color: tuple[int, int, int], scatter_target: tuple[int, int],
                  tile_size: int) -> None:
         super().__init__(pos, visible, sprite,
-                         lives, alive,
-                         False, eatable, False)
+                         lives, alive, "",
+                         False, eatable, pos, False)
         self.color = color
         self.scatter_target = scatter_target
         self.tile_size = tile_size

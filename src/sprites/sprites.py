@@ -46,7 +46,7 @@ class Inky(Ghost):
             p_dx, p_dy = pacman_dir
             pivot_x, pivot_y = px + p_dx * 2, py + p_dy * 2
 
-            bx, by = self.blinky_ref.grid_x, self.blinky_ref.grid_y
+            bx, by = self.blinky_ref.pos
             vec_x, vec_y = pivot_x - bx, pivot_y - by
 
             self.target_tile = (bx + vec_x * 2, by + vec_y * 2)
@@ -64,7 +64,8 @@ class Clyde(Ghost):
                       pacman_dir: tuple[int, int]) -> None:
         if self.state == GhostState.CHASE:
             px, py = pacman_pos
-            dist_sq = (self.grid_x - px) ** 2 + (self.grid_y - py) ** 2
+            gx, gy = self.pos
+            dist_sq = (gx - px) ** 2 + (gy - py) ** 2
 
             if dist_sq > 64:
                 self.target_tile = pacman_pos
