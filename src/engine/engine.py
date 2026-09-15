@@ -19,20 +19,22 @@ class ConfigFileError(Exception):
 
 class Engine:
     def __init__(self, config_file: str):
-        self.wave_manager = WaveManager()
-        self.config: Config
-        self.load_conf(config_file)
         pygame.init()
         self.screen = pygame.display.set_mode((800, 900))
         self.clock = pygame.time.Clock()
         self.running = True
+
+        self.wave_manager = WaveManager()
+        self.config: Config
+        self.load_conf(config_file)
+
         self.scene: Scene = MenuScene(self)
         self.scenes = {
             "Menu": self.scene,
             "Score": ScoreBoard(self),
             "GameOver": GameOverScene(),
             "Running": RunningScene(self),
-            "Pause": PauseScene(),
+            "Pause": PauseScene(self),
         }
         self._next_scene: Scene | None = None
 

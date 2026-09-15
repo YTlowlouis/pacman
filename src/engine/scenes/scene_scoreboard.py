@@ -1,10 +1,6 @@
-from os import truncate
-
 import pygame
 from pydantic import ValidationError
-
 import json
-
 from src.engine.scenes.scene_baseclass import Scene
 from src.models.scoreboard_models import Score
 
