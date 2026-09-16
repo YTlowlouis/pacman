@@ -2,7 +2,9 @@ from pathlib import Path
 
 
 class GameObject:
-    def __init__(self, pos: tuple[int, int], points: int, visible: bool, sprite: Path) -> None:
+    def __init__(self, pos: tuple[int, int],
+                 points: int, visible: bool,
+                 sprite: Path) -> None:
         self.pos = pos
         self.points = points
         self.visible = visible
@@ -17,12 +19,18 @@ class GameObject:
 
 
 class Sprite:
-    def __init__(self, pos: tuple[int, int], points_given: int, visible: bool,
-                 sprite: Path, lives: int, alive: bool, dir: str, can_eat: bool,
-                 eatable: bool, next_dir: str, respawn_coord: tuple[int, int],
+    def __init__(self,
+                 pos: tuple[int, int],
+                 visible: bool,
+                 sprite: Path,
+                 lives: int,
+                 alive: bool,
+                 dir: str,
+                 can_eat: bool,
+                 eatable: bool,
+                 respawn_coord: tuple[int, int],
                  super_power: bool) -> None:
         self.pos = pos
-        self.points_given = points_given
         self.visible = visible
         self.sprite = sprite
         self.lives = lives
@@ -30,7 +38,6 @@ class Sprite:
         self.dir = dir
         self.can_eat = can_eat
         self.eatable = eatable
-        self.next_dir = next_dir
         self.respawn_coord = respawn_coord
         self.super_power = super_power
 
