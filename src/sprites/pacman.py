@@ -1,5 +1,5 @@
 from pathlib import Path
-from src.sprites.base import Sprite
+from src.sprites.base import Sprite  #type: ignore
 
 
 class PacMan(Sprite):

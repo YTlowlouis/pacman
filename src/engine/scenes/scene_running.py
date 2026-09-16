@@ -1,21 +1,24 @@
-from pathlib import Path
 import pygame
-
 from mazegenerator import MazeGenerator
-
 from src.engine.scenes.scene_baseclass import Scene
-from src.sprites.ghost import Ghost
-from src.sprites.sprites import Blinky, Pinky, Inky, Clyde
 from src.sprites.pacman import PacMan
+""" from src.sprites.ghost import Ghost
+from src.sprites.sprites import Blinky, Pinky, Inky, Clyde """
 
 
 class RunningScene(Scene):
-<<<<<<< HEAD
     WALL_COLOR = (33, 33, 222)
     BG_COLOR = (0, 0, 0)
     MARGIN = 20
     THICKNESS = 3
     N, E, S, W = 1, 2, 4, 8
+    DIRECTIONS = {
+        "up": (0, -1, N),
+        "down": (0, 1, S),
+        "left": (-1, 0, W),
+        "right": (1, 0, E),
+    }
+    MOVES_PER_SECOND = 6.0
 
     def __init__(self, engine):
         super().__init__(engine)
@@ -23,6 +26,26 @@ class RunningScene(Scene):
         self.cell_size = 0
         self.origin = (0, 0)
         self.layer: pygame.Surface | None = None
+        self.move_timer = 0.0
+        self.pacman = self._build_pacman()
+        self.pacman_sprite = pygame.image.load(
+            self.pacman.sprite
+        ).convert_alpha()
+
+    def _build_pacman(self) -> PacMan:
+        conf = self.engine.config.pacman
+        return PacMan(
+            lives=self.engine.config.lives,
+            pos=conf.pos,
+            alive=True,
+            visible=True,
+            dir=conf.dir,
+            can_eat=False,
+            next_dir=conf.next_dir,
+            respawn_coord=conf.pos,
+            super_power=False,
+            sprite=conf.sprite,
+        )
 
     def _build_layer(self, size: tuple[int, int]) -> pygame.Surface:
         grid = self.maze.maze
@@ -85,75 +108,52 @@ class RunningScene(Scene):
         self.maze.generate()
         self.layer = None
 
+    KEY_TO_DIR = {
+        pygame.K_UP: "up",
+        pygame.K_DOWN: "down",
+        pygame.K_LEFT: "left",
+        pygame.K_RIGHT: "right",
+    }
+
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_r:
                 self._generate_new_maze()
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                self.engine.change_scene(self.engine.scenes["Pause"])
-            elif event.key == pygame.KMOD_CTRL:
-                pass
-
-"""
-    def __init__(self, engine) -> None:
-        super().__init__(engine)
-
-        pacman_conf = self.engine.config.pacman
-        lives = self.engine.config.lives
-
-        self.pacman = PacMan(
-            lives=lives,
-            pos=pacman_conf.pos,
-            alive=True,
-            visible=True,
-            dir=pacman_conf.dir,
-            can_eat=False,
-            next_dir=pacman_conf.next_dir,
-            respawn_coord=pacman_conf.pos,
-            super_power=False,
-            sprite=pacman_conf.sprite,
-        )
-
-        sprite_path = Path("src/assets/ghost.png")
-        raw_image = pygame.image.load(str(sprite_path)).convert_alpha()
-        self.ghost_texture = pygame.transform.scale(raw_image, (32, 32))
-
-        self.blinky = Blinky(5, 5, sprite_path)
-        self.pinky = Pinky(6, 5, sprite_path)
-        self.inky = Inky(7, 5, sprite_path, blinky_ref=self.blinky)
-        self.clyde = Clyde(8, 5, sprite_path)
-
-        self.ghosts: list[Ghost] = [self.blinky, self.pinky, self.inky, self.clyde]
-
-    def update(self, dt: float) -> None:
-        self.engine.wave_manager.update(dt, self.ghosts)
-
-        pacman_pos = self.pacman.pos
-        
-        dir_vectors = {
-            "up": (0, -1),
-            "down": (0, 1),
-            "left": (-1, 0),
-            "right": (1, 0),
-        }
-        pacman_dir = dir_vectors.get(self.pacman.dir, (0, 0))
-
-        for ghost in self.ghosts:
-            ghost.update_target(pacman_pos, pacman_dir)
+            if event.key in self.KEY_TO_DIR:
+                self.pacman.next_dir = self.KEY_TO_DIR[event.key]
+            if event.key == pygame.K_ESCAPE:
+                pause_scene = self.engine.scenes["Pause"]
+                pause_scene.background_snapshot = self.engine.screen.copy()
+                self.engine.change_scene(pause_scene)
 
     def draw(self, surface: pygame.Surface) -> None:
-<<<<<<< HEAD
         if self.layer is None:
             self.layer = self._build_layer(surface.get_size())
         surface.fill(self.BG_COLOR)
         surface.blit(self.layer, (0, 0))
-=======
-        surface.fill((0, 0, 0))
 
-        for ghost in self.ghosts:
-            screen_x = ghost.grid_x * ghost.tile_size
-            screen_y = ghost.grid_y * ghost.tile_size
-            surface.blit(self.ghost_texture, (screen_x, screen_y))
->>>>>>> cea1237d39beb069e1b0da799f99925d60939baf
+        px, py = self.pacman.pos
+        ox, oy = self.origin
+        c = self.cell_size
+        sprite = pygame.transform.scale(self.pacman_sprite, (c, c))
+        surface.blit(sprite, (ox + px * c, oy + py * c))
 
-"""
+    def _can_move(self, x: int, y: int, direction: str) -> bool:
+        dx, dy, wall_bit = self.DIRECTIONS[direction]
+        nx, ny = x + dx, y + dy
+        rows, cols = len(self.maze.maze), len(self.maze.maze[0])
+        if not (0 <= nx < cols and 0 <= ny < rows):
+            return False
+        return (self.maze.maze[y][x] & wall_bit) == 0
+
+    def update(self, dt: float) -> None:
+        self.move_timer += dt
+        move_interval = 1.0 / self.MOVES_PER_SECOND
+        while self.move_timer >= move_interval:
+            self.move_timer -= move_interval
+            x, y = self.pacman.pos
+            if self._can_move(x, y, self.pacman.next_dir):
+                self.pacman.dir = self.pacman.next_dir
+            if self._can_move(x, y, self.pacman.dir):
+                dx, dy, _ = self.DIRECTIONS[self.pacman.dir]
+                self.pacman.pos = (x + dx, y + dy)
