@@ -201,7 +201,7 @@ class RunningScene(Scene):
             self.images[self.pacman.dir],
             (round(ox + fx * c), round(oy + fy * c)),
         )
-        self.draw_ghost()
+        self.draw_ghost(surface)
 
     def _can_move(self, x: int, y: int, direction: str) -> bool:
         dx, dy, wall_bit = self.DIRECTIONS[direction]
@@ -253,10 +253,10 @@ class RunningScene(Scene):
     def _init_ghost(self) -> None:
         rows, cols = len(self.maze.maze), len(self.maze.maze[0])
         max_x, max_y = rows - 1, cols - 1
-        blinky = Blinky(max_x, 0, Path("src/assets/Blinky.png"))
-        pinky = Pinky((0, 0), Path("src/assets/Pinky.png"))
-        inky = Inky((0, max_y), Path("src/assets/Inky.png"), blinky)
-        clyde = Clyde((max_x, max_y), Path("src/assets/Clyde.png"))
+        blinky = Blinky(max_x, 0, ("src/assets/Blinky.png"))
+        pinky = Pinky(0, 0, ("src/assets/Pinky.png"))
+        inky = Inky(0, max_y, ("src/assets/Inky.png"), blinky)
+        clyde = Clyde(max_x, max_y, ("src/assets/Clyde.png"))
         self.ghosts = [blinky, pinky, inky, clyde]
 
         for ghost in self.ghosts:

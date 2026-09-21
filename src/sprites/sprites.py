@@ -3,8 +3,26 @@ from src.sprites.ghost import Ghost, GhostState
 
 
 class Blinky(Ghost):
-    def __init__(self, x: int, y: int, sprite: Path, tile_size: int = 32) -> None:
-        super().__init__(x, y, 200, True, 1, True, False, sprite, (255, 0, 0), (17, -2), tile_size)
+    """
+    Classe représentant Blinky (fantôme rouge).
+    Cible directement Pac-Man en mode CHASE.
+    """
+
+    def __init__(self, x: int, y: int, sprite_path: Path, tile_size: int = 32) -> None:
+        super().__init__(
+            x=x,
+            y=y,
+            points_given=200,
+            visible=True,
+            lives=1,
+            alive=True,
+            eatable=False,
+            sprite=sprite_path,
+            target=(x, y),
+            progress=0.0,
+            scatter_target=(17, -2),
+            tile_size=tile_size,
+        )
 
     def update_target(self, pacman_pos: tuple[int, int], pacman_dir: tuple[int, int]) -> None:
         if self.state == GhostState.CHASE:
@@ -14,8 +32,26 @@ class Blinky(Ghost):
 
 
 class Pinky(Ghost):
+    """
+    Classe représentant Pinky (fantôme rose).
+    Vise 4 cases devant Pac-Man en mode CHASE.
+    """
+
     def __init__(self, x: int, y: int, sprite: Path, tile_size: int = 32) -> None:
-        super().__init__(x, y, 200, True, 1, True, False, sprite, (255, 184, 255), (1, -2), tile_size)
+        super().__init__(
+            x=x,
+            y=y,
+            points_given=200,
+            visible=True,
+            lives=1,
+            alive=True,
+            eatable=False,
+            sprite=sprite,
+            target=(x, y),
+            progress=0.0,
+            scatter_target=(1, -2),
+            tile_size=tile_size,
+        )
 
     def update_target(self, pacman_pos: tuple[int, int], pacman_dir: tuple[int, int]) -> None:
         if self.state == GhostState.CHASE:
@@ -27,8 +63,26 @@ class Pinky(Ghost):
 
 
 class Inky(Ghost):
+    """
+    Classe représentant Inky (fantôme bleu).
+    Utilise la position de Pac-Man et de Blinky pour calculer sa cible.
+    """
+
     def __init__(self, x: int, y: int, sprite: Path, blinky_ref: Ghost | None = None, tile_size: int = 32) -> None:
-        super().__init__(x, y, 200, True, 1, True, False, sprite, (0, 255, 255), (18, 22), tile_size)
+        super().__init__(
+            x=x,
+            y=y,
+            points_given=200,
+            visible=True,
+            lives=1,
+            alive=True,
+            eatable=False,
+            sprite=sprite,
+            target=(x, y),
+            progress=0.0,
+            scatter_target=(18, 22),
+            tile_size=tile_size,
+        )
         self.blinky_ref = blinky_ref
 
     def update_target(self, pacman_pos: tuple[int, int], pacman_dir: tuple[int, int]) -> None:
@@ -46,8 +100,26 @@ class Inky(Ghost):
 
 
 class Clyde(Ghost):
+    """
+    Classe représentant Clyde (fantôme orange).
+    Fuit vers sa zone scatter s'il est trop proche de Pac-Man (< 8 cases).
+    """
+
     def __init__(self, x: int, y: int, sprite: Path, tile_size: int = 32) -> None:
-        super().__init__(x, y, 200, True, 1, True, False, sprite, (255, 184, 82), (0, 22), tile_size)
+        super().__init__(
+            x=x,
+            y=y,
+            points_given=200,
+            visible=True,
+            lives=1,
+            alive=True,
+            eatable=False,
+            sprite=sprite,
+            target=(x, y),
+            progress=0.0,
+            scatter_target=(0, 22),
+            tile_size=tile_size,
+        )
 
     def update_target(self, pacman_pos: tuple[int, int], pacman_dir: tuple[int, int]) -> None:
         if self.state == GhostState.CHASE:

@@ -13,12 +13,15 @@ class GhostState(Enum):
 class Ghost(Sprite):
     def __init__(self, x: int, y: int, points_given: int, visible: bool,
                  lives: int, alive: bool, eatable: bool, sprite: Path,
-                 color: tuple[int, int, int], scatter_target: tuple[int, int],
+                 target: tuple[int, int] | None,
+                 progress: float,
+                 scatter_target: tuple[int, int],
                  tile_size: int) -> None:
         super().__init__((x, y), points_given, visible, sprite,
                          lives, alive, "",
-                         False, eatable, "", (x, y), False)
-        self.color = color
+                         False, eatable, "", (x, y), False,
+                         target=target,
+                         progress=progress)
         self.scatter_target = scatter_target
         self.tile_size = tile_size
         self.state = GhostState.SCATTER
