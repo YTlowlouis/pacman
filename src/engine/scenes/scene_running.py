@@ -39,14 +39,15 @@ class RunningScene(Scene):
         self.pacman_sprite_closed = pygame.image.load(
             "src/assets/closed_pacman.png"
         ).convert_alpha()
-        self.pacman_sprites = []
-        self.pacman_sprites.append(self.pacman_sprite_open)
-        self.pacman_sprites.append(self.pacman_sprite_closed)
+        self.pacman_sprites = [self.pacman_sprite_open,
+                               self.pacman_sprite_closed]
         self.current_pacman_sprite = 0
+
         self.pacgums = self._build_pacgums()
         self.img_pacgum = pygame.image.load(
             "src/assets/pacgum.png"
         ).convert_alpha()
+
         self.ghosts: list[Ghost] = []
         self.ghost_sprites: dict[Ghost, pygame.Surface] = {}
         self.ghost_images: dict[Ghost, pygame.Surface] = {}
@@ -164,6 +165,7 @@ class RunningScene(Scene):
         font_score = pygame.font.Font("src/assets/sonicfont.ttf", 28)
         if self.layer is None:
             self.layer = self._build_layer(surface.get_size())
+        self._scale_ghost_images()
         surface.fill(self.BG_COLOR)
         surface.blit(self.layer, (0, 0))
         surface_score = font_score.render(f"Score: {self.pacman.points}", True,
@@ -248,7 +250,8 @@ class RunningScene(Scene):
         c = self.cell_size
         for ghost in self.ghosts:
             x, y = ghost.pos
-            surface.blit(self.ghost_images[ghost], (ox + x * c, oy + y * c))
+            if ghost in self.ghost_images:
+                surface.blit(self.ghost_images[ghost], (ox + x * c, oy + y * c))
 
     def _init_ghost(self) -> None:
         rows, cols = len(self.maze.maze), len(self.maze.maze[0])
