@@ -34,7 +34,7 @@ class Sprite:
         respawn_coord: tuple[int, int],
         super_power: bool,
         target: tuple[int, int] | None,
-        progress: float,
+        progress: float
     ) -> None:
         self.pos = pos
         self.points_given = points_given
