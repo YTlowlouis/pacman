@@ -5,14 +5,14 @@ from src.engine.scenes.scene_baseclass import Scene
 class PauseScene(Scene):
     def __init__(self, engine) -> None:
         super().__init__(engine)
-        self.font_title = pygame.font.Font(None, 74)
-        self.font_text = pygame.font.Font(None, 36)
+        self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
+        self.text_font = pygame.font.Font("src/assets/sonicfont.ttf", 26)
 
-        self.title_surface = self.font_title.render("PAUSED",
-                                                    True, (255, 255, 0))
-        self.resume_text = self.font_text.render("Press ESC to Resume",
+        self.title_surface = self.font.render("PAUSED",
+                                              True, (255, 255, 0))
+        self.resume_text = self.text_font.render("Press ESC to Resume",
                                                  True, (255, 255, 255))
-        self.menu_text = self.font_text.render("Press M for Main Menu",
+        self.menu_text = self.text_font.render("Press M for Main Menu",
                                                True, (200, 200, 200))
 
         self.background_snapshot: pygame.Surface | None = None
@@ -28,6 +28,7 @@ class PauseScene(Scene):
         pass
 
     def draw(self, surface: pygame.Surface) -> None:
+        self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
         if self.background_snapshot:
             surface.blit(self.background_snapshot, (0, 0))
 

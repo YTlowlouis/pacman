@@ -8,6 +8,7 @@ class MenuScene(Scene):
         super().__init__(engine)
         self._init_fixed()
         self.param_choice = 0
+        self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN:
@@ -39,6 +40,7 @@ class MenuScene(Scene):
         pass
 
     def draw(self, surface: pygame.Surface) -> None:
+        self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
         surface.fill((0, 0, 0))
 
         surface.blit(self.title, self.title_pos)
@@ -49,6 +51,7 @@ class MenuScene(Scene):
         surface.blit(self.cursor, self.cursor_pos)
 
     def _init_fixed(self) -> None:
+        self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
         self.title = pygame.image.load(
             "src/assets/screentitle.png"
         ).convert_alpha()
@@ -57,8 +60,6 @@ class MenuScene(Scene):
             "src/assets/cursor.png"
         ).convert_alpha()
         self.cursor = pygame.transform.scale_by(self.cursor, 0.1)
-
-        self.font = pygame.font.Font(None, 48)
 
         self.play_text = self.font.render("PLAY", True, (250, 250, 0))
         self.score_board_text = self.font.render(
