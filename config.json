@@ -4,7 +4,8 @@
 			"id": 1,
 			"height": 10,
 			"width": 10,
-			"max_time": 50
+			"max_time": 50,
+			"seed": 42
 		},
 		{
 			"id": 2,

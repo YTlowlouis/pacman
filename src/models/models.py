@@ -13,6 +13,7 @@ class LevelConfig(BaseModel):
     height: int
     width: int
     max_time: int
+    seed: int = 0
 
 
 class PacManConfig(BaseModel):

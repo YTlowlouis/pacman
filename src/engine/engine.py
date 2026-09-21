@@ -103,6 +103,7 @@ class Engine:
                         height=level["height"],
                         width=level["width"],
                         max_time=level["max_time"],
+                        seed=level.get("seed", 0),
                     )
                 )
         except KeyError as e:
@@ -132,10 +133,12 @@ class Engine:
             raise ConfigFileError(
                 f"Invalid option in pacman config: {e.errors()}"
             )
-
-        self.config = Config(
-            levels=levels,
-            points=points_conf,
-            lives=lives,
-            pacman=pacman_conf,
-        )
+        try:
+            self.config = Config(
+                levels=levels,
+                points=points_conf,
+                lives=lives,
+                pacman=pacman_conf,
+            )
+        except ValidationError as e:
+            raise ConfigFileError(f"Error when loading config file: {e}")

@@ -12,6 +12,9 @@ from src.sprites.sprites import Blinky, Pinky, Inky, Clyde """
 class RunningScene(Scene):
     WALL_COLOR = (33, 33, 222)
     BG_COLOR = (0, 0, 0)
+    SCORE_COLOR = (255, 255, 0)
+    SCORE_POS = (15, 15)
+    TIME_POS = (200, 15)
     MARGIN = 20
     THICKNESS = 3
     N, E, S, W = 1, 2, 4, 8
@@ -22,14 +25,16 @@ class RunningScene(Scene):
         "right": (1, 0, E),
     }
     MOVES_PER_SECOND = 6.0
+    GUM_RATIO = 0.5
 
     def __init__(self, engine):
         super().__init__(engine)
-        self.maze = MazeGenerator(size=(15, 15), perfect=False)
         self.cell_size = 0
         self.origin = (0, 0)
         self.layer: pygame.Surface | None = None
-        self.pacman = self._build_pacman()
+        self.font_score = pygame.font.Font("src/assets/sonicfont.ttf", 28)
+        self.maze: MazeGenerator
+
         self.pacman_sprite_open = pygame.image.load(
             "src/assets/open_pacman.png"
         ).convert_alpha()
@@ -40,10 +45,17 @@ class RunningScene(Scene):
         self.pacman_sprites.append(self.pacman_sprite_open)
         self.pacman_sprites.append(self.pacman_sprite_closed)
         self.current_pacman_sprite = 0
-        self.pacgums = self._build_pacgums()
+
         self.img_pacgum = pygame.image.load(
             "src/assets/pacgum.png"
         ).convert_alpha()
+
+        self.images: list[dict[str, pygame.Surface]] = []
+        self.sprite_gum: pygame.Surface | None = None
+        self.gum_offset = 0
+
+        self.pacman = self._build_pacman()
+        self.load_level(0)
 
     def _build_pacman(self) -> PacMan:
         conf = self.engine.config.pacman
@@ -67,11 +79,20 @@ class RunningScene(Scene):
         pacgums_y = []
         for i in range(len(self.maze.maze)):
             for j in range(len(self.maze.maze[0])):
-                pacgums_y.append(
-                    PacGum((i, j), 15, True, "src/assets/cursor.png")
-                )
+                if self.maze.maze[j][i] == 15:
+                    pacgums_y.append(
+                        PacGum((i, j), 15, False, "src/assets/cursor.png")
+                    )
+                else:
+                    pacgums_y.append(
+                        PacGum((i, j), 15, True, "src/assets/cursor.png")
+                    )
             pacgums.append(pacgums_y)
             pacgums_y = []
+        pacgums[0][0].visible = False
+        pacgums[0][-1].visible = False
+        pacgums[-1][0].visible = False
+        pacgums[-1][-1].visible = False
         return pacgums
 
     def _build_layer(self, size: tuple[int, int]) -> pygame.Surface:
@@ -131,9 +152,29 @@ class RunningScene(Scene):
                     )
         return layer
 
-    def _generate_new_maze(self) -> None:
-        self.maze.generate()
-        self.layer = None
+    def _scale_sprites(self) -> None:
+        """Redimensionne les sprites pour la taille de cellule courante.
+
+        Appele uniquement quand le layer est (re)construit, car c'est le
+        seul moment ou cell_size peut changer.
+        """
+        c = self.cell_size
+        self.images = []
+        for frame in self.pacman_sprites:
+            sprite = pygame.transform.scale(frame, (c, c))
+            self.images.append(
+                {
+                    "right": sprite,
+                    "left": pygame.transform.flip(sprite, True, False),
+                    "up": pygame.transform.rotate(sprite, 90),
+                    "down": pygame.transform.rotate(sprite, -90),
+                }
+            )
+        gum_size = max(2, int(c * self.GUM_RATIO))
+        self.sprite_gum = pygame.transform.scale(
+            self.img_pacgum, (gum_size, gum_size)
+        )
+        self.gum_offset = (c - gum_size) // 2
 
     KEY_TO_DIR = {
         pygame.K_UP: "up",
@@ -144,8 +185,6 @@ class RunningScene(Scene):
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_r:
-                self._generate_new_maze()
             if event.key in self.KEY_TO_DIR:
                 self.pacman.next_dir = self.KEY_TO_DIR[event.key]
             if event.key == pygame.K_ESCAPE:
@@ -154,46 +193,51 @@ class RunningScene(Scene):
                 self.engine.change_scene(pause_scene)
 
     def draw(self, surface: pygame.Surface) -> None:
-        font_score = pygame.font.Font("src/assets/sonicfont.ttf", 28)
         if self.layer is None:
             self.layer = self._build_layer(surface.get_size())
+            self._scale_sprites()
+
         surface.fill(self.BG_COLOR)
         surface.blit(self.layer, (0, 0))
-        surface_score = font_score.render(f"Score: {self.pacman.points}", True,
-                                          (255, 255, 0))
-        surface.blit(surface_score, (15, 15))
-        self.eat_pacgum()
+        self._draw_pacgums(surface)
+        self._draw_pacman(surface)
+        self._draw_hud(surface)
 
+    def _draw_pacgums(self, surface: pygame.Surface) -> None:
+        ox, oy = self.origin
+        c = self.cell_size
+        for row in self.pacgums:
+            for pacgum in row:
+                if pacgum.visible is True:
+                    surface.blit(
+                        self.sprite_gum,
+                        (
+                            ox + pacgum.pos[0] * c + self.gum_offset,
+                            oy + pacgum.pos[1] * c + self.gum_offset,
+                        ),
+                    )
+
+    def _draw_pacman(self, surface: pygame.Surface) -> None:
         px, py = self.pacman.pos
         tx, ty = self.pacman.target
         progress = self.pacman.progress
         ox, oy = self.origin
         c = self.cell_size
 
-        sprite = pygame.transform.scale(
-            self.pacman_sprites[self.current_pacman_sprite], (c, c)
-        )
-        sprite_gum = pygame.transform.scale(self.img_pacgum, (c - 2, c - 2))
-        self.images = {
-            "right": sprite,
-            "left": pygame.transform.flip(sprite, True, False),
-            "up": pygame.transform.rotate(sprite, 90),
-            "down": pygame.transform.rotate(sprite, -90),
-        }
         fx = px + (tx - px) * progress
         fy = py + (ty - py) * progress
+        sprite = self.images[self.current_pacman_sprite][self.pacman.dir]
+        surface.blit(sprite, (round(ox + fx * c), round(oy + fy * c)))
 
-        for row in self.pacgums:
-            for pacgum in row:
-                if pacgum.visible is True:
-                    surface.blit(
-                        sprite_gum,
-                        (ox + pacgum.pos[0] * c, oy + pacgum.pos[1] * c),
-                    )
-        surface.blit(
-            self.images[self.pacman.dir],
-            (round(ox + fx * c), round(oy + fy * c)),
+    def _draw_hud(self, surface: pygame.Surface) -> None:
+        surface_score = self.font_score.render(
+            f"Score: {self.pacman.points}", True, self.SCORE_COLOR
         )
+        surface.blit(surface_score, self.SCORE_POS)
+        surface_time = self.font_score.render(
+            f"Time: {max(0, int(self.time_left))}", True, self.SCORE_COLOR
+        )
+        surface.blit(surface_time, self.TIME_POS)
 
     def _can_move(self, x: int, y: int, direction: str) -> bool:
         dx, dy, wall_bit = self.DIRECTIONS[direction]
@@ -204,7 +248,13 @@ class RunningScene(Scene):
         return (self.maze.maze[y][x] & wall_bit) == 0
 
     def update(self, dt: float) -> None:
+        self.time_left -= dt
+        if self.time_left <= 0.0:
+            self.time_left = 0.0
+            self._game_over()
+
         self.eat_pacgum()
+
         self.pacman.progress += self.MOVES_PER_SECOND * dt
         if self.pacman.progress < 1.0:
             return
@@ -227,10 +277,36 @@ class RunningScene(Scene):
             self.pacman.target = self.pacman.pos
             self.pacman.progress = 0.0
 
-    def eat_pacgum(self):
-        for row in self.pacgums:
-            for gum in row:
-                if self.pacman.pos == gum.pos and gum.visible is True:
-                    self.pacman.points += 50
-                if self.pacman.pos == gum.pos:
-                    gum.visible = False
+    def eat_pacgum(self) -> None:
+        x, y = self.pacman.pos
+        gum = self.pacgums[x][y]
+        if gum.visible:
+            gum.visible = False
+            self.remaining_gums -= 1
+            self.pacman.points += self.engine.config.points.pacgum
+
+    def load_level(self, index: int) -> None:
+        conf = self.engine.config.levels[index]
+        self.level_index = index
+
+        self.maze = MazeGenerator(
+            size=(conf.width, conf.height), perfect=False, seed=conf.seed
+        )
+        self.layer = None
+        self.pacgums = self._build_pacgums()
+        self.remaining_gums = sum(
+            gum.visible for row in self.pacgums for gum in row
+        )
+        self.time_left = float(conf.max_time)
+        self._reset_pacman()
+
+    def _reset_pacman(self) -> None:
+        conf = self.engine.config.pacman
+        self.pacman.pos = conf.pos
+        self.pacman.target = conf.pos
+        self.pacman.progress = 0.0
+        self.pacman.dir = conf.dir
+        self.pacman.next_dir = conf.next_dir
+
+    def _game_over(self) -> None:
+        pass
