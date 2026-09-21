@@ -31,7 +31,7 @@ class RunningScene(Scene):
         self.layer: pygame.Surface | None = None
         self.pacman = self._build_pacman()
         self.pacman_sprite_open = pygame.image.load(
-            self.pacman.sprite
+            "src/assets/open_pacman.png"
         ).convert_alpha()
         self.pacman_sprite_closed = pygame.image.load(
             "src/assets/closed_pacman.png"
@@ -42,7 +42,7 @@ class RunningScene(Scene):
         self.current_pacman_sprite = 0
         self.pacgums = self._build_pacgums()
         self.img_pacgum = pygame.image.load(
-            "src/assets/cursor.png"
+            "src/assets/pacgum.png"
         ).convert_alpha()
 
     def _build_pacman(self) -> PacMan:
@@ -154,10 +154,15 @@ class RunningScene(Scene):
                 self.engine.change_scene(pause_scene)
 
     def draw(self, surface: pygame.Surface) -> None:
+        font_score = pygame.font.Font("src/assets/sonicfont.ttf", 28)
         if self.layer is None:
             self.layer = self._build_layer(surface.get_size())
         surface.fill(self.BG_COLOR)
         surface.blit(self.layer, (0, 0))
+        surface_score = font_score.render(f"Score: {self.pacman.points}", True,
+                                          (255, 255, 0))
+        surface.blit(surface_score, (15, 15))
+        self.eat_pacgum()
 
         px, py = self.pacman.pos
         tx, ty = self.pacman.target
@@ -225,5 +230,7 @@ class RunningScene(Scene):
     def eat_pacgum(self):
         for row in self.pacgums:
             for gum in row:
+                if self.pacman.pos == gum.pos and gum.visible is True:
+                    self.pacman.points += 50
                 if self.pacman.pos == gum.pos:
                     gum.visible = False
