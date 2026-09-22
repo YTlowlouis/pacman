@@ -22,8 +22,16 @@ class PacManConfig(BaseModel):
     sprite: Path
 
 
+class GhostConfig(BaseModel):
+    pos: tuple[int, int]
+    dir: str
+    next_dir: str
+    sprite: Path
+
+
 class Config(BaseModel):
     levels: list[LevelConfig]
     points: PointsConfig
     lives: int
     pacman: PacManConfig
+    ghosts: GhostConfig

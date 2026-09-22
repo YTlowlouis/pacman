@@ -3,7 +3,8 @@ from pathlib import Path
 from pydantic import ValidationError
 import pygame
 
-from src.models import Config, PointsConfig, LevelConfig, PacManConfig
+from src.models import Config, PointsConfig, LevelConfig
+from src.models import PacManConfig, GhostConfig
 from src.engine.scenes.scene_menu import MenuScene
 from src.engine.scenes.scene_baseclass import Scene
 from src.engine.scenes.scene_scoreboard import ScoreBoard
@@ -131,6 +132,25 @@ class Engine:
         except ValidationError as e:
             raise ConfigFileError(
                 f"Invalid option in pacman config: {e.errors()}"
+            )
+
+        try:
+            ghost_conf = GhostConfig(
+                pos=tuple(options["ghost"]["pos"]),
+                dir=options["ghost"]["dir"],
+                next_dir=options["ghost"]["next_dir"],
+                sprite=Path(options["ghost"]["sprite"]),
+            )
+        except KeyError as e:
+            raise ConfigFileError(f"Missing option in ghost config: {e}")
+        except ValidationError as e:
+            raise ConfigFileError(
+                f"Invalid option in ghost config: {e.errors()}"
+            )
+
+        self.config = Config(
+                lives=lives,
+                ghosts=ghost_conf,
             )
 
         self.config = Config(

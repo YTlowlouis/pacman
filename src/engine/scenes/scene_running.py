@@ -5,8 +5,9 @@ from src.engine.scenes.scene_baseclass import Scene
 from src.sprites.pacman import PacMan
 from src.sprites.ghost import Ghost
 from src.sprites.sprites import Inky, Blinky, Clyde, Pinky
-from src.sprites.items import PacGum, SuperPacGum
-from pathlib import Path
+from src.sprites.items import PacGum
+
+
 
 """ from src.sprites.ghost import Ghost
 from src.sprites.sprites import Blinky, Pinky, Inky, Clyde """
@@ -33,6 +34,7 @@ class RunningScene(Scene):
         self.origin = (0, 0)
         self.layer: pygame.Surface | None = None
         self.pacman = self._build_pacman()
+        self.ghosts = self._build_ghost()
         self.pacman_sprite_open = pygame.image.load(
             "src/assets/open_pacman.png"
         ).convert_alpha()
@@ -42,7 +44,7 @@ class RunningScene(Scene):
         self.pacman_sprites = [self.pacman_sprite_open,
                                self.pacman_sprite_closed]
         self.current_pacman_sprite = 0
-
+        self.ghosts.pos = (self.ghosts.x, self.ghosts.y)
         self.pacgums = self._build_pacgums()
         self.img_pacgum = pygame.image.load(
             "src/assets/pacgum.png"
@@ -65,6 +67,18 @@ class RunningScene(Scene):
             next_dir=conf.next_dir,
             respawn_coord=conf.pos,
             super_power=False,
+            sprite=conf.sprite,
+            target=conf.pos,
+            progress=0.0,
+        )
+
+    def _build_ghost(self) -> Ghost:
+        conf = self.engine.config.ghosts
+        return Ghost(
+            pos=conf.pos,
+            alive=True,
+            visible=True,
+            next_dir=conf.next_dir,
             sprite=conf.sprite,
             target=conf.pos,
             progress=0.0,
@@ -111,7 +125,7 @@ class RunningScene(Scene):
                         self.WALL_COLOR,
                         (left, top),
                         (right, top),
-                        self.THICKNESS,
+                        self.THICKNESS,pos
                     )
                 if cell & self.S:
                     pygame.draw.line(
@@ -176,6 +190,9 @@ class RunningScene(Scene):
         px, py = self.pacman.pos
         tx, ty = self.pacman.target
         progress = self.pacman.progress
+        gx, gy = self.ghosts.pos
+        tgx, tgy = self.ghosts.target
+        g_progress = self.ghosts.g_progress
         ox, oy = self.origin
         c = self.cell_size
 
@@ -189,8 +206,18 @@ class RunningScene(Scene):
             "up": pygame.transform.rotate(sprite, 90),
             "down": pygame.transform.rotate(sprite, -90),
         }
+        ghost_gum = pygame.transform.scale(self.ghost_images, (c - 2, c - 2))
+        self.images = {
+            "right": ghost_gum,
+            "left": pygame.transform.flip(ghost_gum, True, False),
+            "up": pygame.transform.rotate(ghost_gum, 90),
+            "down": pygame.transform.rotate(ghost_gum, -90),
+        }
         fx = px + (tx - px) * progress
         fy = py + (ty - py) * progress
+        gfx = gx + (tgx - gx) * g_progress
+        gfy = gy + (tgy - gy) * g_progress
+
 
         for row in self.pacgums:
             for pacgum in row:
@@ -203,6 +230,10 @@ class RunningScene(Scene):
             self.images[self.pacman.dir],
             (round(ox + fx * c), round(oy + fy * c)),
         )
+        surface.blit(
+                    self.images[self.ghosts.dir],
+                    (round(ox + gfx * c), round(oy + gfy * c)),
+                )
         self.draw_ghost(surface)
 
     def _can_move(self, x: int, y: int, direction: str) -> bool:
@@ -225,7 +256,6 @@ class RunningScene(Scene):
             self.current_pacman_sprite = 1
         else:
             self.current_pacman_sprite = 0
-        print(self.pacman.pos)
 
         x, y = self.pacman.pos
         if self._can_move(x, y, self.pacman.next_dir):
@@ -236,6 +266,24 @@ class RunningScene(Scene):
         else:
             self.pacman.target = self.pacman.pos
             self.pacman.progress = 0.0
+
+    def update_ghost(self, dt: float) -> None:
+        self.ghost.g_progress += self.MOVES_PER_SECOND * dt
+        if self.ghost.g_progress < 1.0:
+            return
+
+        self.ghost.pos = self.ghost.target
+        self.ghost.g_progress -= 1.0
+
+        x, y = self.ghost.pos
+        if self._can_move(x, y, self.ghost.next_dir):
+            self.ghost.dir = self.ghost.next_dir
+        if self._can_move(x, y, self.ghost.dir):
+            dx, dy, _ = self.DIRECTIONS[self.pacman.dir]
+            self.ghost.target = (x + dx, y + dy)
+        else:
+            self.ghost.target = self.ghost.pos
+            self.ghost.progress = 0.0
 
     def eat_pacgum(self):
         for row in self.pacgums:
@@ -251,7 +299,8 @@ class RunningScene(Scene):
         for ghost in self.ghosts:
             x, y = ghost.pos
             if ghost in self.ghost_images:
-                surface.blit(self.ghost_images[ghost], (ox + x * c, oy + y * c))
+                surface.blit(self.ghost_images[ghost],
+                             (ox + x * c, oy + y * c))
 
     def _init_ghost(self) -> None:
         rows, cols = len(self.maze.maze), len(self.maze.maze[0])
