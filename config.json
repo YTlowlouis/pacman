@@ -1,31 +1,36 @@
 {
-	"levels": [
-		{
-			"id": 1,
-			"height": 10,
-			"width": 10,
-			"max_time": 50
-		},
-		{
-			"id": 2,
-			"height": 20,
-			"width": 20,
-			"max_time": 90
-		}
-	],
-
-	"lives": 3,
-
-	"pacman": {
-		"pos": [1, 1],
-		"dir": "right",
-		"next_dir": "right",
-		"sprite": "src/assets/pacman.png"
-	},
-
-	"points_per": {
-		"ghost": 200,
-		"super_pacgum": 50,
-		"pacgum": 10
-	}
+    "levels": [
+        {
+            "id": 1,
+            "height": 10,
+            "width": 10,
+            "max_time": 50
+        }
+    ],
+    "lives": 3,
+    "pacman": {
+        "pos": [1, 1],
+        "dir": "right",
+        "next_dir": "right",
+        "sprite": "src/assets/pacman.png"
+    },
+    "ghost": {
+        "blinky": {
+            "pos": [0, 0],
+            "dir": "right",
+            "next_dir": "right",
+            "sprite": "src/assets/Blinky.png"
+        },
+        "pinky": {
+            "pos": [0, 1],
+            "dir": "right",
+            "next_dir": "right",
+            "sprite": "src/assets/Pinky.png"
+        }
+    },
+    "points_per": {
+        "ghost": 200,
+        "super_pacgum": 50,
+        "pacgum": 10
+    }
 }
