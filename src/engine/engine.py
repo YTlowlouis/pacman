@@ -32,7 +32,7 @@ class Engine:
         self.scenes = {
             "Menu": self.scene,
             "Score": ScoreBoard(self),
-            "GameOver": GameOverScene(),
+            "GameOver": GameOverScene(self),
             "Running": RunningScene(self),
             "Pause": PauseScene(self),
         }

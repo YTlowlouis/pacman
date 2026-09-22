@@ -26,6 +26,7 @@ class RunningScene(Scene):
     }
     MOVES_PER_SECOND = 6.0
     GUM_RATIO = 0.5
+    FADE_DURATION = 0.8
 
     def __init__(self, engine):
         super().__init__(engine)
@@ -54,6 +55,11 @@ class RunningScene(Scene):
         self.sprite_gum: pygame.Surface | None = None
         self.gum_offset = 0
 
+        self.fade_veil = pygame.Surface(self.engine.screen.get_size())
+        self.fade_veil.fill(self.BG_COLOR)
+        self.fade_alpha = 0.0
+        self.fade_target: Scene | None = None
+
         self.pacman = self._build_pacman()
         self.load_level(0)
 
@@ -75,24 +81,21 @@ class RunningScene(Scene):
         )
 
     def _build_pacgums(self) -> list[list[PacGum]]:
-        pacgums = []
-        pacgums_y = []
-        for i in range(len(self.maze.maze)):
-            for j in range(len(self.maze.maze[0])):
-                if self.maze.maze[j][i] == 15:
-                    pacgums_y.append(
-                        PacGum((i, j), 15, False, "src/assets/cursor.png")
-                    )
-                else:
-                    pacgums_y.append(
-                        PacGum((i, j), 15, True, "src/assets/cursor.png")
-                    )
-            pacgums.append(pacgums_y)
-            pacgums_y = []
-        pacgums[0][0].visible = False
-        pacgums[0][-1].visible = False
-        pacgums[-1][0].visible = False
-        pacgums[-1][-1].visible = False
+        points = self.engine.config.points.pacgum
+        pacgums = [
+            [
+                PacGum((x, y), points, cell != 15, "src/assets/pacgum.png")
+                for x, cell in enumerate(row)
+            ]
+            for y, row in enumerate(self.maze.maze)
+        ]
+        for corner in (
+            pacgums[0][0],
+            pacgums[0][-1],
+            pacgums[-1][0],
+            pacgums[-1][-1],
+        ):
+            corner.visible = False
         return pacgums
 
     def _build_layer(self, size: tuple[int, int]) -> pygame.Surface:
@@ -203,6 +206,10 @@ class RunningScene(Scene):
         self._draw_pacman(surface)
         self._draw_hud(surface)
 
+        if self.fade_alpha > 0:
+            self.fade_veil.set_alpha(int(self.fade_alpha))
+            surface.blit(self.fade_veil, (0, 0))
+
     def _draw_pacgums(self, surface: pygame.Surface) -> None:
         ox, oy = self.origin
         c = self.cell_size
@@ -248,12 +255,24 @@ class RunningScene(Scene):
         return (self.maze.maze[y][x] & wall_bit) == 0
 
     def update(self, dt: float) -> None:
+        if self.fade_target is not None:
+            self.fade_alpha += 255.0 * dt / self.FADE_DURATION
+            if self.fade_alpha >= 255.0:
+                self.fade_alpha = 255.0
+                self.engine.change_scene(self.fade_target)
+                self.fade_target = None
+            return
+
         self.time_left -= dt
         if self.time_left <= 0.0:
             self.time_left = 0.0
             self._game_over()
+            return
 
         self.eat_pacgum()
+
+        if self.remaining_gums <= 0:
+            self.load_level(self.level_index + 1)
 
         self.pacman.progress += self.MOVES_PER_SECOND * dt
         if self.pacman.progress < 1.0:
@@ -279,7 +298,7 @@ class RunningScene(Scene):
 
     def eat_pacgum(self) -> None:
         x, y = self.pacman.pos
-        gum = self.pacgums[x][y]
+        gum = self.pacgums[y][x]
         if gum.visible:
             gum.visible = False
             self.remaining_gums -= 1
@@ -298,6 +317,8 @@ class RunningScene(Scene):
             gum.visible for row in self.pacgums for gum in row
         )
         self.time_left = float(conf.max_time)
+        self.fade_alpha = 0.0
+        self.fade_target = None
         self._reset_pacman()
 
     def _reset_pacman(self) -> None:
@@ -309,4 +330,12 @@ class RunningScene(Scene):
         self.pacman.next_dir = conf.next_dir
 
     def _game_over(self) -> None:
-        pass
+        gameover = self.engine.scenes["GameOver"]
+        gameover.enter(self.pacman.points)
+        self.fade_target = gameover
+
+    def start_new_game(self) -> None:
+        self.pacman.points = 0
+        self.pacman.lives = self.engine.config.lives
+        self.pacman.alive = True
+        self.load_level(0)
