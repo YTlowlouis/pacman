@@ -14,7 +14,10 @@ class RunningScene(Scene):
     BG_COLOR = (0, 0, 0)
     SCORE_COLOR = (255, 255, 0)
     SCORE_POS = (15, 15)
-    TIME_POS = (200, 15)
+    HUD_GAP = 25
+    HUD_MARGIN = 15
+    LIFE_ICON_SIZE = 28
+    LIFE_SPACING = 6
     MARGIN = 20
     THICKNESS = 3
     N, E, S, W = 1, 2, 4, 8
@@ -50,6 +53,10 @@ class RunningScene(Scene):
         self.img_pacgum = pygame.image.load(
             "src/assets/pacgum.png"
         ).convert_alpha()
+        self.life_icon = pygame.transform.scale(
+            self.pacman_sprite_open,
+            (self.LIFE_ICON_SIZE, self.LIFE_ICON_SIZE),
+        )
 
         self.images: list[dict[str, pygame.Surface]] = []
         self.sprite_gum: pygame.Surface | None = None
@@ -61,6 +68,11 @@ class RunningScene(Scene):
         self.fade_target: Scene | None = None
 
         self.pacman = self._build_pacman()
+        self.cheat_mode = False
+        self.lives_lost = 1
+        self.die_when_touched = True
+        self.ghost_move = True
+
         self.load_level(0)
 
     def _build_pacman(self) -> PacMan:
@@ -194,6 +206,12 @@ class RunningScene(Scene):
                 pause_scene = self.engine.scenes["Pause"]
                 pause_scene.background_snapshot = self.engine.screen.copy()
                 self.engine.change_scene(pause_scene)
+            if event.key == pygame.K_c:
+                self.cheat_mode = True
+            if event.key == pygame.K_l and self.cheat_mode is True:
+                self.lives_lost = 0 if self.lives_lost == 1 else 1
+            if event.key == pygame.K_w and self.cheat_mode is True:
+                self.load_level(self.level_index + 1)
 
     def draw(self, surface: pygame.Surface) -> None:
         if self.layer is None:
@@ -237,14 +255,25 @@ class RunningScene(Scene):
         surface.blit(sprite, (round(ox + fx * c), round(oy + fy * c)))
 
     def _draw_hud(self, surface: pygame.Surface) -> None:
-        surface_score = self.font_score.render(
-            f"Score: {self.pacman.points}", True, self.SCORE_COLOR
-        )
-        surface.blit(surface_score, self.SCORE_POS)
-        surface_time = self.font_score.render(
-            f"Time: {max(0, int(self.time_left))}", True, self.SCORE_COLOR
-        )
-        surface.blit(surface_time, self.TIME_POS)
+        x, y = self.SCORE_POS
+        for text in (
+            f"Score: {self.pacman.points}",
+            f"Level: {self.level_index + 1}",
+            f"Time: {max(0, int(self.time_left))}",
+        ):
+            rendered = self.font_score.render(text, True, self.SCORE_COLOR)
+            surface.blit(rendered, (x, y))
+            x += rendered.get_width() + self.HUD_GAP
+        self._draw_lives(surface)
+
+    def _draw_lives(self, surface: pygame.Surface) -> None:
+        step = self.LIFE_ICON_SIZE + self.LIFE_SPACING
+        right = surface.get_width() - self.HUD_MARGIN
+        for i in range(max(0, self.pacman.lives)):
+            surface.blit(
+                self.life_icon,
+                (right - (i + 1) * step, self.SCORE_POS[1]),
+            )
 
     def _can_move(self, x: int, y: int, direction: str) -> bool:
         dx, dy, wall_bit = self.DIRECTIONS[direction]
@@ -305,6 +334,9 @@ class RunningScene(Scene):
             self.pacman.points += self.engine.config.points.pacgum
 
     def load_level(self, index: int) -> None:
+        if index >= len(self.engine.config.levels):
+            self.fade_target = self.engine.scenes["Win"]
+            return
         conf = self.engine.config.levels[index]
         self.level_index = index
 

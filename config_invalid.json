@@ -1,0 +1,44 @@
+# Config volontairement invalide, pour tester la tolerance aux erreurs (sujet V.3).
+# Le jeu doit demarrer malgre tout, en signalant chaque correction.
+# Usage : uv run pacman.py config_invalid.json
+{
+	# Ce commentaire est indente : il teste le lstrip() du parsing.
+	"levels": [
+		{
+			"id": 1,
+			"height": 1,
+			"width": 9999,
+			"max_time": -5,
+			"seed": 42
+		},
+		"ce niveau n est meme pas un objet",
+		{
+			"id": "premier",
+			"height": "grand",
+			"width": 21,
+			"seed": -3
+		},
+		{
+			"height": 19,
+			"width": 19,
+			"max_time": true
+		},
+		{}
+	],
+
+	"lives": "trois",
+
+	"pacman": {
+		"pos": [1, 2, 3],
+		"dir": "diagonal",
+		"sprite": 42
+	},
+
+	"points_per": {
+		"ghost": -10
+	},
+
+	"cle_totalement_inconnue": {
+		"doit": "etre ignoree sans un mot"
+	}
+}
