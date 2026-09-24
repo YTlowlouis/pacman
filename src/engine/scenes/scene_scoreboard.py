@@ -16,7 +16,6 @@ class ScoreBoard(Scene):
         self.font_title = pygame.font.Font(None, 70)
         self.scores: dict = {}
         self.loadscores()
-        self.loadscores_text()
         self.title_score_text = self.font_title.render(
             "High Scores", True, (255, 255, 0)
         )
@@ -52,7 +51,7 @@ class ScoreBoard(Scene):
                 (center_x - text.get_width() // 2, base_y + count * 50),
             )
 
-    def loadscores(self):
+    def loadscores(self) -> dict[str, int]:
         try:
             with open("scores.json", "r") as f:
                 content = json.load(f)
@@ -82,9 +81,25 @@ class ScoreBoard(Scene):
                     self.scores.items(), key=lambda item: item[1], reverse=True
                 )
             }
+        self.loadscores_text()
+        return self.scores
 
     def loadscores_text(self) -> None:
         self.fonted_scores = [
             self.font.render(f"{key}: {val}", True, (255, 255, 0))
             for key, val in self.scores.items()
         ]
+
+    def savescore(self, score: Score) -> None:
+        self.scores[score.name] = max(
+            score.score, self.scores.get(score.name, 0)
+        )
+        self.scores = dict(
+            sorted(self.scores.items(), key=lambda i: i[1], reverse=True)[:10]
+        )
+        try:
+            with open("scores.json", "w") as f:
+                json.dump(self.scores, f, indent=2)
+        except OSError as e:
+            raise ScoreFileError(f"Error while saving score file: {e}")
+        self.loadscores_text()
