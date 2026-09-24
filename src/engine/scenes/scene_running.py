@@ -2,6 +2,7 @@ import pygame
 
 from mazegenerator import MazeGenerator
 from src.engine.scenes.scene_baseclass import Scene
+from src.engine.wave_manager import WaveManager
 from src.sprites.sprites import Inky, Pinky, Clyde, Blinky, Ghost
 from src.sprites.pacman import PacMan
 from src.sprites.items import PacGum, SuperPacGum
@@ -29,9 +30,12 @@ class RunningScene(Scene):
         "left": (-1, 0, W),
         "right": (1, 0, E),
     }
+    OPPOSITE = {"up": "down", "down": "up", "left": "right", "right": "left"}
     MOVES_PER_SECOND = 6.0
+    GHOST_PER_SECOND = 4.5
     GUM_RATIO = 0.5
     SUPER_GUM_RATIO = 1.6
+    GHOST_MARGIN = 10
     FADE_DURATION = 0.8
     HIGH_TIMER = 3.0
 
@@ -77,8 +81,7 @@ class RunningScene(Scene):
         self.gum_offset = 0
 
         self.ghosts: list[Ghost] = []
-        self.ghost_sprites: dict[Ghost, pygame.Surface] = {}
-        self.ghost_images: dict[Ghost, pygame.Surface] = {}
+        self.ghost_offset = 0
 
         self.fade_veil = pygame.Surface(self.engine.screen.get_size())
         self.fade_veil.fill(self.BG_COLOR)
@@ -100,16 +103,14 @@ class RunningScene(Scene):
         grid = self.maze.maze
         rows, cols = len(grid), len(grid[0])
         max_x, max_y = rows - 1, cols - 1
-        blinky = Blinky(max_x, 0, ("src/assets/Blinky.png"))
-        pinky = Pinky(0, 0, ("src/assets/Pinky.png"))
-        inky = Inky(0, max_y, ("src/assets/Inky.png"), blinky)
-        clyde = Clyde(max_x, max_y, ("src/assets/Clyde.png"))
+        blinky = Blinky((max_x, 0), ("src/assets/Blinky.png"))
+        pinky = Pinky((0, 0), ("src/assets/Pinky.png"))
+        inky = Inky((0, max_y), ("src/assets/Inky.png"), blinky)
+        clyde = Clyde((max_x, max_y), ("src/assets/Clyde.png"))
         self.ghosts = [blinky, pinky, inky, clyde]
 
         for ghost in self.ghosts:
-            self.ghost_sprites[ghost] = pygame.image.load(
-                ghost.sprite
-            ).convert_alpha()
+            ghost.image = pygame.image.load(ghost.sprite).convert_alpha()
 
     def _build_pacman(self) -> PacMan:
         conf = self.engine.config.pacman
@@ -230,6 +231,14 @@ class RunningScene(Scene):
         )
         self.super_gum_offset = (c - super_gum_size) // 2
 
+        ghost_size = max(2, c - self.GHOST_MARGIN)
+        for ghost in self.ghosts:
+            raw = pygame.image.load(ghost.sprite).convert_alpha()
+            ghost.image = pygame.transform.smoothscale(
+                raw, (ghost_size, ghost_size)
+            )
+        self.ghost_offset = (c - ghost_size) // 2
+
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN:
             if event.key in self.KEY_TO_DIR:
@@ -254,6 +263,7 @@ class RunningScene(Scene):
         surface.blit(self.layer, (0, 0))
         self._draw_pacgums(surface)
         self._draw_pacman(surface)
+        self._draw_ghost(surface)
         self._draw_hud(surface)
 
         if self.fade_alpha > 0:
@@ -294,6 +304,29 @@ class RunningScene(Scene):
         fy = py + (ty - py) * progress
         sprite = self.images[self.current_pacman_sprite][self.pacman.dir]
         surface.blit(sprite, (round(ox + fx * c), round(oy + fy * c)))
+
+    def _draw_ghost(self, surface: pygame.Surface) -> None:
+        ox, oy = self.origin
+        c = self.cell_size
+
+        for ghost in self.ghosts:
+            if ghost.image is None:
+                continue
+
+            px, py = ghost.pos
+            tx, ty = ghost.next_tile
+            progress = ghost.progress
+
+            fx = px + (tx - px) * progress
+            fy = py + (ty - py) * progress
+            if ghost.visible:
+                surface.blit(
+                    ghost.image,
+                    (
+                        round(ox + fx * c) + self.ghost_offset,
+                        round(oy + fy * c) + self.ghost_offset,
+                    ),
+                )
 
     def _draw_hud(self, surface: pygame.Surface) -> None:
         x, y = self.SCORE_POS
@@ -347,6 +380,8 @@ class RunningScene(Scene):
             return
 
         self.eat_pacgum()
+        self.update_ghosts(dt)
+        self.eat_pacman()
 
         if self.remaining_gums <= 0:
             self.load_level(self.level_index + 1)
@@ -383,6 +418,19 @@ class RunningScene(Scene):
             self.remaining_gums -= 1
             self.pacman.points += gum.points
 
+    def eat_pacman(self) -> None:
+        for ghost in self.ghosts:
+            if ghost.pos == self.pacman.pos and not self.pacman.super_power:
+                self.pacman.lives -= self.lives_lost
+                self._reset_pacman()
+            elif ghost.pos == self.pacman.pos and self.pacman.super_power:
+                self.reset_ghost(ghost)
+
+    def reset_ghost(self, ghost: Ghost) -> None:
+        ghost.visible = False
+        ghost.pos = (0, 0)
+        ghost.visible = True
+
     def _start_high(self) -> None:
         self.pacman.super_power = True
         self.is_high_timer = self.HIGH_TIMER
@@ -398,6 +446,8 @@ class RunningScene(Scene):
             size=(conf.width, conf.height), perfect=False, seed=conf.seed
         )
         self.layer = None
+        self._init_ghost()
+        self.engine.wave_manager = WaveManager()
         self.pacgums = self._build_pacgums()
         self.remaining_gums = sum(
             gum.visible for row in self.pacgums for gum in row
@@ -424,20 +474,42 @@ class RunningScene(Scene):
         self.pacman.points = 0
         self.pacman.lives = self.engine.config.lives
         self.pacman.alive = True
-        self._init_ghost()
         self.load_level(0)
 
-    def draw_ghost(self, surface: pygame.Surface) -> None:
-        ox, oy = self.origin
-        c = self.cell_size
+    def update_ghosts(self, dt: float) -> None:
+        self.engine.wave_manager.update(dt, self.ghosts)
+        pdx, pdy, _ = self.DIRECTIONS[self.pacman.dir]
         for ghost in self.ghosts:
-            x, y = ghost.pos
-            if ghost in self.ghost_images:
-                surface.blit(self.ghost_images[ghost],
-                             (ox + x * c, oy + y * c))
+            ghost.progress += dt * self.GHOST_PER_SECOND
+            if ghost.progress < 1.0:
+                continue
+            ghost.pos = ghost.next_tile
+            ghost.progress -= 1.0
+            ghost.update_target(self.pacman.pos, (pdx, pdy))
+            ghost.dir = self._choose_next_dir(ghost)
+            if ghost.dir:
+                dx, dy, _ = self.DIRECTIONS[ghost.dir]
+                ghost.next_tile = (ghost.pos[0] + dx, ghost.pos[1] + dy)
+            else:
+                ghost.next_tile = ghost.pos
+                ghost.progress = 0.0
 
-    def _scale_ghost_images(self) -> None:
-        size = (self.cell_size - 15, self.cell_size - 15)
-        for ghost, image in self.ghost_sprites.items():
-            self.ghost_images[ghost] = pygame.transform.smoothscale(
-                image, size)
+    def _choose_next_dir(self, ghost: Ghost) -> str | None:
+        x, y = ghost.pos
+        tx, ty = ghost.target_tile
+        back = self.OPPOSITE.get(ghost.dir)
+        best_dir = None
+        best_dist = float("inf")
+        for d, (dx, dy, _) in self.DIRECTIONS.items():
+            if d == back:
+                continue
+            if not self._can_move(x, y, d):
+                continue
+            nx, ny = x + dx, y + dy
+            dist = (nx - tx) ** 2 + (ny - ty) ** 2
+            if dist < best_dist:
+                best_dir = d
+                best_dist = dist
+        if best_dir is None and back and self._can_move(x, y, back):
+            best_dir = back
+        return best_dir

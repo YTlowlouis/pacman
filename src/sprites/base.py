@@ -24,7 +24,7 @@ class Sprite:
         pos: tuple[int, int],
         points_given: int,
         visible: bool,
-        sprite: Path,
+        sprite: str,
         lives: int,
         alive: bool,
         dir: str,
