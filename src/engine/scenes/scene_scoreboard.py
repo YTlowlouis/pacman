@@ -12,7 +12,7 @@ class ScoreFileError(Exception):
 class ScoreBoard(Scene):
     def __init__(self, engine):
         super().__init__(engine)
-        self.font = pygame.font.Font(None, 43)
+        self.font = pygame.font.Font("src/assets/sonicfont.ttf")
         self.font_title = pygame.font.Font(None, 70)
         self.scores: dict = {}
         self.loadscores()

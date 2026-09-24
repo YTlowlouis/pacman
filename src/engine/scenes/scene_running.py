@@ -2,6 +2,7 @@ import pygame
 
 from mazegenerator import MazeGenerator
 from src.engine.scenes.scene_baseclass import Scene
+from src.sprites.sprites import Inky, Pinky, Clyde, Blinky, Ghost
 from src.sprites.pacman import PacMan
 from src.sprites.items import PacGum, SuperPacGum
 from src.sprites.base import GameObject
@@ -75,6 +76,10 @@ class RunningScene(Scene):
         self.sprite_gum: pygame.Surface | None = None
         self.gum_offset = 0
 
+        self.ghosts: list[Ghost] = []
+        self.ghost_sprites: dict[Ghost, pygame.Surface] = {}
+        self.ghost_images: dict[Ghost, pygame.Surface] = {}
+
         self.fade_veil = pygame.Surface(self.engine.screen.get_size())
         self.fade_veil.fill(self.BG_COLOR)
         self.fade_alpha = 0.0
@@ -90,6 +95,21 @@ class RunningScene(Scene):
         self.ghost_move = True
 
         self.load_level(0)
+
+    def _init_ghost(self) -> None:
+        grid = self.maze.maze
+        rows, cols = len(grid), len(grid[0])
+        max_x, max_y = rows - 1, cols - 1
+        blinky = Blinky(max_x, 0, ("src/assets/Blinky.png"))
+        pinky = Pinky(0, 0, ("src/assets/Pinky.png"))
+        inky = Inky(0, max_y, ("src/assets/Inky.png"), blinky)
+        clyde = Clyde(max_x, max_y, ("src/assets/Clyde.png"))
+        self.ghosts = [blinky, pinky, inky, clyde]
+
+        for ghost in self.ghosts:
+            self.ghost_sprites[ghost] = pygame.image.load(
+                ghost.sprite
+            ).convert_alpha()
 
     def _build_pacman(self) -> PacMan:
         conf = self.engine.config.pacman
@@ -404,4 +424,20 @@ class RunningScene(Scene):
         self.pacman.points = 0
         self.pacman.lives = self.engine.config.lives
         self.pacman.alive = True
+        self._init_ghost()
         self.load_level(0)
+
+    def draw_ghost(self, surface: pygame.Surface) -> None:
+        ox, oy = self.origin
+        c = self.cell_size
+        for ghost in self.ghosts:
+            x, y = ghost.pos
+            if ghost in self.ghost_images:
+                surface.blit(self.ghost_images[ghost],
+                             (ox + x * c, oy + y * c))
+
+    def _scale_ghost_images(self) -> None:
+        size = (self.cell_size - 15, self.cell_size - 15)
+        for ghost, image in self.ghost_sprites.items():
+            self.ghost_images[ghost] = pygame.transform.smoothscale(
+                image, size)
