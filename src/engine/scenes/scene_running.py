@@ -4,6 +4,7 @@ from mazegenerator import MazeGenerator
 from src.engine.scenes.scene_baseclass import Scene
 from src.sprites.pacman import PacMan
 from src.sprites.items import PacGum, SuperPacGum
+from src.sprites.base import GameObject
 
 """ from src.sprites.ghost import Ghost
 from src.sprites.sprites import Blinky, Pinky, Inky, Clyde """
@@ -29,7 +30,16 @@ class RunningScene(Scene):
     }
     MOVES_PER_SECOND = 6.0
     GUM_RATIO = 0.5
+    SUPER_GUM_RATIO = 1.6
     FADE_DURATION = 0.8
+    HIGH_TIMER = 3.0
+
+    KEY_TO_DIR = {
+        pygame.K_UP: "up",
+        pygame.K_DOWN: "down",
+        pygame.K_LEFT: "left",
+        pygame.K_RIGHT: "right",
+    }
 
     def __init__(self, engine):
         super().__init__(engine)
@@ -53,6 +63,9 @@ class RunningScene(Scene):
         self.img_pacgum = pygame.image.load(
             "src/assets/pacgum.png"
         ).convert_alpha()
+        self.img_super_pacgum = pygame.image.load(
+            "src/assets/super_pacgum.png"
+        ).convert_alpha()
         self.life_icon = pygame.transform.scale(
             self.pacman_sprite_open,
             (self.LIFE_ICON_SIZE, self.LIFE_ICON_SIZE),
@@ -68,6 +81,9 @@ class RunningScene(Scene):
         self.fade_target: Scene | None = None
 
         self.pacman = self._build_pacman()
+
+        self.is_high_timer = 3.0
+
         self.cheat_mode = False
         self.lives_lost = 1
         self.die_when_touched = True
@@ -92,22 +108,24 @@ class RunningScene(Scene):
             progress=0.0,
         )
 
-    def _build_pacgums(self) -> list[list[PacGum]]:
+    def _build_pacgums(self) -> list[list[GameObject]]:
         points = self.engine.config.points.pacgum
-        pacgums = [
+        points2 = self.engine.config.points.super_pacgum
+        pacgums: list[list[GameObject]] = [
             [
                 PacGum((x, y), points, cell != 15, "src/assets/pacgum.png")
                 for x, cell in enumerate(row)
             ]
             for y, row in enumerate(self.maze.maze)
         ]
-        for corner in (
-            pacgums[0][0],
-            pacgums[0][-1],
-            pacgums[-1][0],
-            pacgums[-1][-1],
-        ):
-            corner.visible = False
+
+        for y in (0, -1):
+            for x in (0, -1):
+                old = pacgums[y][x]
+                pacgums[y][x] = SuperPacGum(
+                    old.pos, points2, True, "src/assets/super_pacgum.png"
+                )
+
         return pacgums
 
     def _build_layer(self, size: tuple[int, int]) -> pygame.Surface:
@@ -168,11 +186,6 @@ class RunningScene(Scene):
         return layer
 
     def _scale_sprites(self) -> None:
-        """Redimensionne les sprites pour la taille de cellule courante.
-
-        Appele uniquement quand le layer est (re)construit, car c'est le
-        seul moment ou cell_size peut changer.
-        """
         c = self.cell_size
         self.images = []
         for frame in self.pacman_sprites:
@@ -191,12 +204,11 @@ class RunningScene(Scene):
         )
         self.gum_offset = (c - gum_size) // 2
 
-    KEY_TO_DIR = {
-        pygame.K_UP: "up",
-        pygame.K_DOWN: "down",
-        pygame.K_LEFT: "left",
-        pygame.K_RIGHT: "right",
-    }
+        super_gum_size = max(2, int(c * self.SUPER_GUM_RATIO))
+        self.sprite_super_gum = pygame.transform.scale(
+            self.img_super_pacgum, (super_gum_size, super_gum_size)
+        )
+        self.super_gum_offset = (c - super_gum_size) // 2
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN:
@@ -234,13 +246,22 @@ class RunningScene(Scene):
         for row in self.pacgums:
             for pacgum in row:
                 if pacgum.visible is True:
-                    surface.blit(
-                        self.sprite_gum,
-                        (
-                            ox + pacgum.pos[0] * c + self.gum_offset,
-                            oy + pacgum.pos[1] * c + self.gum_offset,
-                        ),
-                    )
+                    if isinstance(pacgum, SuperPacGum):
+                        surface.blit(
+                            self.sprite_super_gum,
+                            (
+                                ox + pacgum.pos[0] * c + self.super_gum_offset,
+                                oy + pacgum.pos[1] * c + self.super_gum_offset,
+                            ),
+                        )
+                    else:
+                        surface.blit(
+                            self.sprite_gum,
+                            (
+                                ox + pacgum.pos[0] * c + self.gum_offset,
+                                oy + pacgum.pos[1] * c + self.gum_offset,
+                            ),
+                        )
 
     def _draw_pacman(self, surface: pygame.Surface) -> None:
         px, py = self.pacman.pos
@@ -293,6 +314,13 @@ class RunningScene(Scene):
             return
 
         self.time_left -= dt
+
+        if self.pacman.super_power:
+            self.is_high_timer -= dt
+            if self.is_high_timer <= 0.0:
+                self.is_high_timer = 0.0
+                self.pacman.super_power = False
+
         if self.time_left <= 0.0:
             self.time_left = 0.0
             self._game_over()
@@ -329,9 +357,15 @@ class RunningScene(Scene):
         x, y = self.pacman.pos
         gum = self.pacgums[y][x]
         if gum.visible:
+            if isinstance(gum, SuperPacGum):
+                self._start_high()
             gum.visible = False
             self.remaining_gums -= 1
-            self.pacman.points += self.engine.config.points.pacgum
+            self.pacman.points += gum.points
+
+    def _start_high(self) -> None:
+        self.pacman.super_power = True
+        self.is_high_timer = self.HIGH_TIMER
 
     def load_level(self, index: int) -> None:
         if index >= len(self.engine.config.levels):
