@@ -1,5 +1,5 @@
 from pathlib import Path
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class PointsConfig(BaseModel):
@@ -10,9 +10,10 @@ class PointsConfig(BaseModel):
 
 class LevelConfig(BaseModel):
     id: int
-    height: int
-    width: int
+    height: int = Field(ge=3)
+    width: int = Field(ge=3)
     max_time: int
+    seed: int = 0
 
 
 class PacManConfig(BaseModel):
