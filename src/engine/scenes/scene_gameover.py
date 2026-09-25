@@ -55,7 +55,8 @@ class GameOverScene(Scene):
         else:
             surface.blit(
                     self.title_loser,
-                    (center_x - self.title_loser.get_width() // 2, self.TITLE_Y),
+                    (center_x - self.title_loser.get_width() // 2,
+                     self.TITLE_Y),
             )
         final = self.font_scores.render(
             f"Your score: {self.final_score}", True, self.TEXT_COLOR

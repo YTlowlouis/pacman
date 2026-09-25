@@ -1,5 +1,5 @@
-from pathlib import Path
 from pydantic import BaseModel, Field
+from pathlib import Path
 
 
 class PointsConfig(BaseModel):
