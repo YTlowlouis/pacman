@@ -20,8 +20,8 @@ class GameOverScene(Scene):
         super().__init__(engine)
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 60)
         self.font_scores = pygame.font.Font("src/assets/sonicfont.ttf", 40)
-        self.title = self.font.render("GAME OVER", True, self.TEXT_COLOR)
-
+        self.title_loser = self.font.render("GAME OVER", True, self.TEXT_COLOR)
+        self.title_winner = self.font.render("VICTORY", True, self.TEXT_COLOR)
         self.entering_name = False
         self.player_name = ""
         self.caret_timer = 0.0
@@ -47,10 +47,16 @@ class GameOverScene(Scene):
     def draw(self, surface: pygame.Surface) -> None:
         surface.fill(self.BG_COLOR)
         center_x = surface.get_width() // 2
-        surface.blit(
-            self.title,
-            (center_x - self.title.get_width() // 2, self.TITLE_Y),
-        )
+        if self.winner_flag is True:
+            surface.blit(
+                self.title_winner,
+                (center_x - self.title_winner.get_width() // 2, self.TITLE_Y),
+            )
+        else:
+            surface.blit(
+                    self.title_loser,
+                    (center_x - self.title_loser.get_width() // 2, self.TITLE_Y),
+            )
         final = self.font_scores.render(
             f"Your score: {self.final_score}", True, self.TEXT_COLOR
         )
@@ -114,8 +120,9 @@ class GameOverScene(Scene):
         score_scene = self.engine.scenes["Score"]
         return score_scene.loadscores()
 
-    def enter(self, final_score: int) -> None:
+    def enter(self, final_score: int, winner_flag: bool) -> None:
         self.final_score = final_score
+        self.winner_flag = winner_flag
         self.player_name = ""
         self.entering_name = True
         self.scores = self.loadscore()

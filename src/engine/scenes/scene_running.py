@@ -449,7 +449,8 @@ class RunningScene(Scene):
 
     def load_level(self, index: int) -> None:
         if index >= len(self.engine.config.levels):
-            self.fade_target = self.engine.scenes["Win"]
+            self.fade_target = self.engine.scenes["GameOver"]
+            self.fade_target.enter(self.pacman.points, True)
             return
         conf = self.engine.config.levels[index]
         self.level_index = index
@@ -500,7 +501,7 @@ class RunningScene(Scene):
 
     def _game_over(self) -> None:
         gameover = self.engine.scenes["GameOver"]
-        gameover.enter(self.pacman.points)
+        gameover.enter(self.pacman.points, False)
         self.fade_target = gameover
 
     def start_new_game(self) -> None:

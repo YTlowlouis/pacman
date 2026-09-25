@@ -9,7 +9,6 @@ from src.engine.scenes.scene_scoreboard import ScoreBoard
 from src.engine.scenes.scene_gameover import GameOverScene
 from src.engine.scenes.scene_running import RunningScene
 from src.engine.scenes.scene_pause import PauseScene
-from src.engine.scenes.scene_victory import Victory
 from src.engine.wave_manager import WaveManager
 
 
@@ -49,8 +48,7 @@ class Engine:
             "Score": ScoreBoard(self),
             "GameOver": GameOverScene(self),
             "Running": RunningScene(self),
-            "Pause": PauseScene(self),
-            "Win": Victory(self),
+            "Pause": PauseScene(self)
         }
         self._next_scene: Scene | None = None
 
