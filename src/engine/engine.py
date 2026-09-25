@@ -26,7 +26,6 @@ class Engine:
         "max_time": 120,
     }
     DEFAULT_PACMAN = {
-        "pos": (1, 1),
         "dir": "right",
         "next_dir": "right",
         "sprite": "src/assets/pacman.png",
@@ -231,25 +230,12 @@ class Engine:
             self._warn("missing or invalid 'pacman', using defaults")
             raw = {}
 
-        pos = raw.get("pos")
-        if (
-            not isinstance(pos, (list, tuple))
-            or len(pos) != 2
-            or not all(
-                isinstance(v, int) and not isinstance(v, bool) for v in pos
-            )
-        ):
-            default_pos = self.DEFAULT_PACMAN["pos"]
-            self._warn(f"pacman: invalid 'pos' ({pos!r}), using {default_pos}")
-            pos = default_pos
-
         sprite = raw.get("sprite")
         if not isinstance(sprite, str):
             sprite = self.DEFAULT_PACMAN["sprite"]
             self._warn(f"pacman: invalid 'sprite', using {sprite}")
 
         return PacManConfig(
-            pos=(pos[0], pos[1]),
             dir=self.DEFAULT_PACMAN["dir"],
             next_dir=self.DEFAULT_PACMAN["next_dir"],
             sprite=Path(sprite),

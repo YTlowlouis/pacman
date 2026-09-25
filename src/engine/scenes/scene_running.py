@@ -38,6 +38,7 @@ class RunningScene(Scene):
     GHOST_MARGIN = 10
     FADE_DURATION = 0.8
     HIGH_TIMER = 3.0
+    GHOST_GRACE = 2.0
 
     KEY_TO_DIR = {
         pygame.K_UP: "up",
@@ -91,6 +92,7 @@ class RunningScene(Scene):
         self.pacman = self._build_pacman()
 
         self.is_high_timer = 3.0
+        self.ghost_grace_timer = 0.0
 
         self.cheat_mode = False
         self.lives_lost = 1
@@ -113,19 +115,20 @@ class RunningScene(Scene):
             ghost.image = pygame.image.load(ghost.sprite).convert_alpha()
 
     def _build_pacman(self) -> PacMan:
+        # La position est posee par load_level, qui seul connait le maze.
         conf = self.engine.config.pacman
         return PacMan(
             lives=self.engine.config.lives,
-            pos=conf.pos,
+            pos=(0, 0),
             alive=True,
             visible=True,
             dir=conf.dir,
             can_eat=False,
             next_dir=conf.next_dir,
-            respawn_coord=conf.pos,
+            respawn_coord=(0, 0),
             super_power=False,
             sprite=conf.sprite,
-            target=conf.pos,
+            target=(0, 0),
             progress=0.0,
         )
 
@@ -374,7 +377,10 @@ class RunningScene(Scene):
                 self.is_high_timer = 0.0
                 self.pacman.super_power = False
 
-        if self.time_left <= 0.0:
+        if self.ghost_grace_timer > 0.0:
+            self.ghost_grace_timer = max(0.0, self.ghost_grace_timer - dt)
+
+        if self.time_left <= 0.0 or self.pacman.lives <= 0:
             self.time_left = 0.0
             self._game_over()
             return
@@ -419,12 +425,18 @@ class RunningScene(Scene):
             self.pacman.points += gum.points
 
     def eat_pacman(self) -> None:
+        if self.ghost_grace_timer > 0.0:
+            return
         for ghost in self.ghosts:
-            if ghost.pos == self.pacman.pos and not self.pacman.super_power:
+            if ghost.pos != self.pacman.pos:
+                continue
+            if self.pacman.super_power:
+                self.reset_ghost(ghost)
+            else:
                 self.pacman.lives -= self.lives_lost
                 self._reset_pacman()
-            elif ghost.pos == self.pacman.pos and self.pacman.super_power:
-                self.reset_ghost(ghost)
+                self.ghost_grace_timer = self.GHOST_GRACE
+                return
 
     def reset_ghost(self, ghost: Ghost) -> None:
         ghost.visible = False
@@ -445,6 +457,7 @@ class RunningScene(Scene):
         self.maze = MazeGenerator(
             size=(conf.width, conf.height), perfect=False, seed=conf.seed
         )
+        self.start_pos = self._find_start_cell()
         self.layer = None
         self._init_ghost()
         self.engine.wave_manager = WaveManager()
@@ -455,12 +468,32 @@ class RunningScene(Scene):
         self.time_left = float(conf.max_time)
         self.fade_alpha = 0.0
         self.fade_target = None
+        self.ghost_grace_timer = self.GHOST_GRACE
         self._reset_pacman()
+
+    def _find_start_cell(self) -> tuple[int, int]:
+        """Cellule libre la plus proche du centre du labyrinthe.
+
+        Le centre exact est souvent un mur : MazeGenerator y grave un
+        motif '42' en cellules pleines.
+        """
+        grid = self.maze.maze
+        cx, cy = len(grid[0]) // 2, len(grid) // 2
+        free = [
+            (x, y)
+            for y, row in enumerate(grid)
+            for x, cell in enumerate(row)
+            if cell != 15
+        ]
+        if not free:
+            return (0, 0)
+        return min(free, key=lambda p: (p[0] - cx) ** 2 + (p[1] - cy) ** 2)
 
     def _reset_pacman(self) -> None:
         conf = self.engine.config.pacman
-        self.pacman.pos = conf.pos
-        self.pacman.target = conf.pos
+        self.pacman.pos = self.start_pos
+        self.pacman.target = self.start_pos
+        self.pacman.respawn_coord = self.start_pos
         self.pacman.progress = 0.0
         self.pacman.dir = conf.dir
         self.pacman.next_dir = conf.next_dir

@@ -17,7 +17,6 @@ class LevelConfig(BaseModel):
 
 
 class PacManConfig(BaseModel):
-    pos: tuple[int, int]
     dir: str
     next_dir: str
     sprite: Path
