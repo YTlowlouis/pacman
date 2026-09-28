@@ -1,6 +1,8 @@
-import pygame
-from pydantic import ValidationError
 import json
+from typing import Any
+import pygame
+from pygame import Surface
+from pydantic import ValidationError
 from src.engine.scenes.scene_baseclass import Scene
 from src.models.scoreboard_models import Score
 
@@ -13,11 +15,12 @@ class ScoreBoard(Scene):
     SCORE_FILE = "scores.json"
     TOP = 10
 
-    def __init__(self, engine):
+    def __init__(self, engine: Any):
         super().__init__(engine)
-        self.font = pygame.font.Font("src/assets/sonicfont.ttf")
+        self.font = pygame.font.Font("src/assets/sonicfont.ttf", 36)
         self.font_title = pygame.font.Font(None, 70)
-        self.scores: dict = {}
+        self.scores: dict[str, int] = {}
+        self.fonted_scores: list[pygame.Surface] = []
         self.loadscores()
         self.title_score_text = self.font_title.render(
             "High Scores", True, (255, 255, 0)
@@ -30,7 +33,7 @@ class ScoreBoard(Scene):
     def update(self, dt: float) -> None:
         pass
 
-    def draw(self, surface: pygame.Surface) -> None:
+    def draw(self, surface: Surface) -> None:
         surface.fill((0, 0, 0))
 
         surface.blit(
@@ -43,7 +46,7 @@ class ScoreBoard(Scene):
         )
         self._draw_10_scores(surface)
 
-    def _draw_10_scores(self, surface: pygame.Surface) -> None:
+    def _draw_10_scores(self, surface: Surface) -> None:
         center_x = surface.get_width() // 2
         base_y = 200
         for count, text in enumerate(self.fonted_scores):
@@ -93,18 +96,19 @@ class ScoreBoard(Scene):
             for key, val in self.scores.items()
         ]
 
-    def savescore(self, score: Score) -> None:
-        self.scores[score.name] = max(
-            score.score, self.scores.get(score.name, 0)
-        )
-        self.scores = dict(
-            sorted(self.scores.items(), key=lambda i: i[1], reverse=True)[
-                : self.TOP
-            ]
-        )
-        try:
-            with open(self.SCORE_FILE, "w") as f:
-                json.dump(self.scores, f, indent=2)
-        except OSError as e:
-            raise ScoreFileError(f"Error while saving score file: {e}")
-        self.loadscores_text()
+    def savescore(self, score: Any) -> None:
+        if isinstance(score, Score):
+            self.scores[score.name] = max(
+                score.score, self.scores.get(score.name, 0)
+            )
+            self.scores = dict(
+                sorted(self.scores.items(), key=lambda i: i[1], reverse=True)[
+                    : self.TOP
+                ]
+            )
+            try:
+                with open(self.SCORE_FILE, "w") as f:
+                    json.dump(self.scores, f, indent=2)
+            except OSError as e:
+                raise ScoreFileError(f"Error while saving score file: {e}")
+            self.loadscores_text()

@@ -1,9 +1,11 @@
+from typing import Any
+from pygame import Surface
 import pygame
 from src.engine.scenes.scene_baseclass import Scene
 
 
 class PauseScene(Scene):
-    def __init__(self, engine) -> None:
+    def __init__(self, engine: Any) -> None:
         super().__init__(engine)
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
         self.text_font = pygame.font.Font("src/assets/sonicfont.ttf", 26)
@@ -27,7 +29,7 @@ class PauseScene(Scene):
     def update(self, dt: float) -> None:
         pass
 
-    def draw(self, surface: pygame.Surface) -> None:
+    def draw(self, surface: Surface) -> None:
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
         if self.background_snapshot:
             surface.blit(self.background_snapshot, (0, 0))

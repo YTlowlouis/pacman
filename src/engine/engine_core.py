@@ -1,8 +1,7 @@
 import json
-from pathlib import Path
+from typing import Any
 import pygame
-
-from src.models import Config, PointsConfig, LevelConfig, PacManConfig
+from src.models.models import Config, PointsConfig, LevelConfig, PacManConfig
 from src.engine.scenes.scene_menu import MenuScene
 from src.engine.scenes.scene_baseclass import Scene
 from src.engine.scenes.scene_scoreboard import ScoreBoard
@@ -44,7 +43,7 @@ class Engine:
         self.load_conf(config_file)
 
         self.scene: Scene = MenuScene(self)
-        self.scenes = {
+        self.scenes: dict[str, Scene] = {
             "Menu": self.scene,
             "Score": ScoreBoard(self),
             "GameOver": GameOverScene(self),
@@ -83,7 +82,7 @@ class Engine:
 
     def _get_int(
         self,
-        source: dict,
+        source: dict[str, Any],
         key: str,
         default: int,
         minimum: int | None = None,
@@ -110,7 +109,7 @@ class Engine:
             return maximum
         return value
 
-    def _read_options(self, config_file: str) -> dict:
+    def _read_options(self, config_file: str) -> dict[str, Any]:
         try:
             with open(config_file, "r") as file:
                 text = "".join(
@@ -138,7 +137,7 @@ class Engine:
             )
         return options
 
-    def _build_points(self, options: dict) -> PointsConfig:
+    def _build_points(self, options: dict[str, Any]) -> PointsConfig:
         raw = options.get("points_per")
         if not isinstance(raw, dict):
             self._warn("missing or invalid 'points_per', using defaults")
@@ -167,7 +166,7 @@ class Engine:
             ),
         )
 
-    def _build_levels(self, options: dict) -> list[LevelConfig]:
+    def _build_levels(self, options: dict[str, Any]) -> list[LevelConfig]:
         raw_levels = options.get("levels")
         if not isinstance(raw_levels, list) or not raw_levels:
             self._warn("missing or empty 'levels', using one default level")
@@ -224,7 +223,7 @@ class Engine:
             )
         return levels
 
-    def _build_pacman_conf(self, options: dict) -> PacManConfig:
+    def _build_pacman_conf(self, options: dict[str, Any]) -> PacManConfig:
         raw = options.get("pacman")
         if not isinstance(raw, dict):
             self._warn("missing or invalid 'pacman', using defaults")
@@ -232,13 +231,13 @@ class Engine:
 
         sprite = raw.get("sprite")
         if not isinstance(sprite, str):
-            sprite = self.DEFAULT_PACMAN["sprite"]
+            sprite = str(self.DEFAULT_PACMAN["sprite"])
             self._warn(f"pacman: invalid 'sprite', using {sprite}")
 
         return PacManConfig(
-            dir=self.DEFAULT_PACMAN["dir"],
-            next_dir=self.DEFAULT_PACMAN["next_dir"],
-            sprite=Path(sprite),
+            dir=str(self.DEFAULT_PACMAN["dir"]),
+            next_dir=str(self.DEFAULT_PACMAN["next_dir"]),
+            sprite=str(sprite),
         )
 
     def load_conf(self, config_file: str) -> None:

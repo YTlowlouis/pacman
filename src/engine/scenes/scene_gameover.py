@@ -1,6 +1,7 @@
+from typing import Any
 from pydantic import ValidationError
+from pygame import Surface
 import pygame
-
 from src.engine.scenes.scene_baseclass import Scene
 from src.models.scoreboard_models import Score
 
@@ -16,8 +17,9 @@ class GameOverScene(Scene):
     TITLE_Y = 100
     FINAL_SCORE_Y = 190
 
-    def __init__(self, engine):
+    def __init__(self, engine: Any):
         super().__init__(engine)
+        self.scores: dict[str, int] = {}
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 60)
         self.font_scores = pygame.font.Font("src/assets/sonicfont.ttf", 40)
         self.title = self.font.render("GAME OVER", True, self.TEXT_COLOR)
@@ -39,7 +41,7 @@ class GameOverScene(Scene):
     def update(self, dt: float) -> None:
         self.caret_timer = (self.caret_timer + dt) % 1.0
 
-    def draw(self, surface: pygame.Surface) -> None:
+    def draw(self, surface: Surface) -> None:
         surface.fill(self.BG_COLOR)
         center_x = surface.get_width() // 2
         surface.blit(
@@ -107,7 +109,8 @@ class GameOverScene(Scene):
 
     def loadscore(self) -> dict[str, int]:
         score_scene = self.engine.scenes["Score"]
-        return score_scene.loadscores()
+        scores: dict[str, int] = score_scene.loadscores()
+        return scores
 
     def enter(self, final_score: int) -> None:
         self.final_score = final_score

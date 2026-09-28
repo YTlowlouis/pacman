@@ -1,5 +1,5 @@
 import argparse
-from src.engine.engine import Engine, ConfigFileError
+from src.engine.engine_core import Engine, ConfigFileError
 from src.engine.scenes.scene_scoreboard import ScoreFileError
 
 

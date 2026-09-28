@@ -1,5 +1,6 @@
+from typing import Any
+from pygame import Surface
 import pygame
-
 from src.engine.scenes.scene_baseclass import Scene
 
 
@@ -7,7 +8,7 @@ class Victory(Scene):
     BG_COLOR = (0, 0, 0)
     TEXT_COLOR = (255, 255, 0)
 
-    def __init__(self, engine):
+    def __init__(self, engine: Any):
         super().__init__(engine)
         self.font_title = pygame.font.Font("src/assets/sonicfont.ttf", 70)
         self.font_hint = pygame.font.Font("src/assets/sonicfont.ttf", 40)
@@ -25,7 +26,7 @@ class Victory(Scene):
     def update(self, dt: float) -> None:
         pass
 
-    def draw(self, surface: pygame.Surface) -> None:
+    def draw(self, surface: Surface) -> None:
         surface.fill(self.BG_COLOR)
         surface.blit(
             self.title_win_text,
