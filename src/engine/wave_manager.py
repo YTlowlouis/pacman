@@ -4,7 +4,6 @@ from src.sprites.ghost import GhostState, Ghost
 class WaveManager:
     def __init__(self) -> None:
         self.waves = [
-            (GhostState.SCATTER, 7),
             (GhostState.CHASE, 20),
             (GhostState.SCATTER, 7),
             (GhostState.CHASE, 20),

@@ -1,5 +1,4 @@
-from pathlib import Path
-from src.sprites.base import Sprite  # type: ignore
+from src.sprites.base import Sprite
 
 
 class PacMan(Sprite):
@@ -14,7 +13,7 @@ class PacMan(Sprite):
         next_dir: str,
         respawn_coord: tuple[int, int],
         super_power: bool,
-        sprite: Path,
+        sprite: str,
         target: tuple[int, int],
         progress: float,
     ) -> None:
