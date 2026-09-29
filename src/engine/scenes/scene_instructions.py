@@ -8,6 +8,8 @@ if TYPE_CHECKING:
 
 
 class InstructionsScene(Scene):
+    """Help screen listing the controls, rules and cheat keys."""
+
     BG_COLOR = (0, 0, 0)
     TITLE_COLOR = (255, 255, 0)
     HEADER_COLOR = (255, 255, 0)
@@ -47,6 +49,11 @@ class InstructionsScene(Scene):
     ]
 
     def __init__(self, engine: "Engine") -> None:
+        """Render every text of the screen.
+
+        Args:
+            engine: Game engine owning the scenes.
+        """
         super().__init__(engine)
         font_title = pygame.font.Font("src/assets/sonicfont.ttf", 60)
         font_header = pygame.font.Font("src/assets/sonicfont.ttf", 32)
@@ -68,13 +75,28 @@ class InstructionsScene(Scene):
         ]
 
     def handle_event(self, event: pygame.event.Event) -> None:
+        """Go back to the menu with ESC.
+
+        Args:
+            event: Pygame event to handle.
+        """
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.engine.change_scene(self.engine.scenes["Menu"])
 
     def update(self, dt: float) -> None:
+        """Nothing to update: the screen is static.
+
+        Args:
+            dt: Elapsed time since the last frame, in seconds.
+        """
         pass
 
     def draw(self, surface: pygame.surface.Surface) -> None:
+        """Draw the title, the sections and the return hint.
+
+        Args:
+            surface: Surface to draw on.
+        """
         surface.fill(self.BG_COLOR)
         center_x = surface.get_width() // 2
 

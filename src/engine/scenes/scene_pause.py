@@ -7,7 +7,14 @@ if TYPE_CHECKING:
 
 
 class PauseScene(Scene):
+    """Pause screen drawn over a snapshot of the game."""
+
     def __init__(self, engine: "Engine") -> None:
+        """Render the pause texts.
+
+        Args:
+            engine: Game engine owning the scenes.
+        """
         super().__init__(engine)
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
         self.text_font = pygame.font.Font("src/assets/sonicfont.ttf", 26)
@@ -22,6 +29,11 @@ class PauseScene(Scene):
         self.background_snapshot: pygame.surface.Surface | None = None
 
     def handle_event(self, event: pygame.event.Event) -> None:
+        """Resume with ESC or go back to the menu with M.
+
+        Args:
+            event: Pygame event to handle.
+        """
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.engine.change_scene(self.engine.scenes["Running"])
@@ -29,9 +41,19 @@ class PauseScene(Scene):
                 self.engine.change_scene(self.engine.scenes["Menu"])
 
     def update(self, dt: float) -> None:
+        """Nothing to update: the game is paused.
+
+        Args:
+            dt: Elapsed time since the last frame, in seconds.
+        """
         pass
 
     def draw(self, surface: pygame.surface.Surface) -> None:
+        """Draw the frozen game, a dark overlay and the pause texts.
+
+        Args:
+            surface: Surface to draw on.
+        """
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
         if self.background_snapshot:
             surface.blit(self.background_snapshot, (0, 0))

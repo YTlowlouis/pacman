@@ -9,7 +9,14 @@ if TYPE_CHECKING:
 
 
 class MenuScene(Scene):
+    """Main menu: play, highscores, instructions and exit."""
+
     def __init__(self, engine: "Engine") -> None:
+        """Build the menu and put the cursor on PLAY.
+
+        Args:
+            engine: Game engine owning the scenes.
+        """
         super().__init__(engine)
         self.cursor_pos_index = 0
         self._init_fixed()
@@ -17,6 +24,11 @@ class MenuScene(Scene):
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
 
     def handle_event(self, event: pygame.event.Event) -> None:
+        """Move the cursor with the arrows and open the selected entry.
+
+        Args:
+            event: Pygame event to handle.
+        """
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_DOWN:
                 if self.cursor_pos_index < len(self.param_list) - 1:
@@ -50,9 +62,19 @@ class MenuScene(Scene):
                     self.engine.running = False
 
     def update(self, dt: float) -> None:
+        """Nothing to update: the menu is static.
+
+        Args:
+            dt: Elapsed time since the last frame, in seconds.
+        """
         pass
 
     def draw(self, surface: pygame.surface.Surface) -> None:
+        """Draw the title, the menu entries and the cursor.
+
+        Args:
+            surface: Surface to draw on.
+        """
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
         surface.fill((0, 0, 0))
 
@@ -64,6 +86,7 @@ class MenuScene(Scene):
         surface.blit(self.cursor, self.cursor_pos)
 
     def _init_fixed(self) -> None:
+        """Load the images and render the texts that never change."""
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
         self.title = pygame.image.load(
             "src/assets/screentitle.png"

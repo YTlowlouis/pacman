@@ -10,10 +10,17 @@ if TYPE_CHECKING:
 
 
 class ScoreBoard(Scene):
+    """Highscore screen; also loads and saves the top 10 scores."""
+
     SCORE_FILE = "scores.json"
     TOP = 10
 
     def __init__(self, engine: "Engine") -> None:
+        """Load the scores and render the title.
+
+        Args:
+            engine: Game engine owning the scenes.
+        """
         super().__init__(engine)
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 20)
         self.font_title = pygame.font.Font(None, 70)
@@ -24,13 +31,28 @@ class ScoreBoard(Scene):
         )
 
     def handle_event(self, event: pygame.event.Event) -> None:
+        """Go back to the menu with ESC.
+
+        Args:
+            event: Pygame event to handle.
+        """
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.engine.change_scene(self.engine.scenes["Menu"])
 
     def update(self, dt: float) -> None:
+        """Nothing to update: the screen is static.
+
+        Args:
+            dt: Elapsed time since the last frame, in seconds.
+        """
         pass
 
     def draw(self, surface: pygame.surface.Surface) -> None:
+        """Draw the title and the top 10 scores.
+
+        Args:
+            surface: Surface to draw on.
+        """
         surface.fill((0, 0, 0))
 
         surface.blit(
@@ -44,6 +66,11 @@ class ScoreBoard(Scene):
         self._draw_10_scores(surface)
 
     def _draw_10_scores(self, surface: pygame.surface.Surface) -> None:
+        """Draw the 10 best scores, centered.
+
+        Args:
+            surface: Surface to draw on.
+        """
         center_x = surface.get_width() // 2
         base_y = 200
         for count, text in enumerate(self.fonted_scores):
@@ -55,6 +82,11 @@ class ScoreBoard(Scene):
             )
 
     def loadscores(self) -> dict[str, int]:
+        """Load the scores from the file, skipping invalid entries.
+
+        Returns:
+            The top 10 scores by player name, best first.
+        """
         content = self._read_score_file()
         scores: list[Score] = []
         for name, value in content.items():
@@ -72,6 +104,12 @@ class ScoreBoard(Scene):
         return self.scores
 
     def _read_score_file(self) -> dict[object, object]:
+        """Read the score file, falling back to no score on any error.
+
+        Returns:
+            The raw JSON object, or an empty dict if the file is
+            missing, unreadable, not valid JSON or not an object.
+        """
         try:
             with open(self.SCORE_FILE, "r") as f:
                 text = f.read()
@@ -98,12 +136,21 @@ class ScoreBoard(Scene):
         return content
 
     def loadscores_text(self) -> None:
+        """Render one text surface per score."""
         self.fonted_scores = [
             self.font.render(f"{key}: {val}", True, (255, 255, 0))
             for key, val in self.scores.items()
         ]
 
     def savescore(self, score: Score) -> None:
+        """Record a score, keep the top 10 and write them to the file.
+
+        A player only keeps their best score. If the file cannot be
+        written, the scores are kept for this session only.
+
+        Args:
+            score: Score to record.
+        """
         self.scores[score.name] = max(
             score.score, self.scores.get(score.name, 0)
         )

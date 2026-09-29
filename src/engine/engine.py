@@ -14,10 +14,14 @@ from src.engine.wave_manager import WaveManager
 
 
 class ConfigFileError(Exception):
+    """Raised when the config file is missing, unreadable or not JSON."""
+
     pass
 
 
 class Engine:
+    """Owns the window, the game loop, the scenes and the config."""
+
     DEFAULT_LIVES = 3
     DEFAULT_POINTS = {"ghost": 200, "super_pacgum": 50, "pacgum": 10}
     DEFAULT_LEVEL = {
@@ -34,6 +38,14 @@ class Engine:
     MAX_MAZE_SIZE = 60
 
     def __init__(self, config_file: str):
+        """Open the window, load the config and create every scene.
+
+        Args:
+            config_file: Path of the JSON config file.
+
+        Raises:
+            ConfigFileError: If the config file cannot be read.
+        """
         pygame.init()
         self.screen = pygame.display.set_mode((800, 900))
         self.clock = pygame.time.Clock()
@@ -55,6 +67,11 @@ class Engine:
         self._next_scene: Scene | None = None
 
     def run(self) -> None:
+        """Run the game loop until the player quits.
+
+        Each frame dispatches the events, updates and draws the current
+        scene, then applies any pending scene change.
+        """
         while self.running:
             dt = self.clock.tick(60) / 1000.0
 
@@ -75,10 +92,20 @@ class Engine:
         pygame.quit()
 
     def change_scene(self, scene: Scene) -> None:
+        """Switch to another scene at the end of the current frame.
+
+        Args:
+            scene: Scene to show next.
+        """
         self._next_scene = scene
 
     @staticmethod
     def _warn(message: str) -> None:
+        """Print a config warning.
+
+        Args:
+            message: Text to print.
+        """
         print(f"config: {message}")
 
     def _get_int(
@@ -91,6 +118,21 @@ class Engine:
         where: str = "",
         quiet: bool = False,
     ) -> int:
+        """Read an integer option, with a default and optional bounds.
+
+        Args:
+            source: Dict to read from.
+            key: Option name.
+            default: Value used when the option is missing or not an
+                integer.
+            minimum: Lowest allowed value, if any.
+            maximum: Highest allowed value, if any.
+            where: Prefix telling where the option is, for warnings.
+            quiet: If True, do not warn when the option is missing.
+
+        Returns:
+            The option value, or the default or bound that replaces it.
+        """
         value = source.get(key)
         if value is None:
             if not quiet:
@@ -111,6 +153,18 @@ class Engine:
         return int(value)
 
     def _read_options(self, config_file: str) -> dict:
+        """Read the config file, skipping lines that start with ``#``.
+
+        Args:
+            config_file: Path of the config file.
+
+        Returns:
+            The parsed top-level JSON object.
+
+        Raises:
+            ConfigFileError: If the file cannot be read, is not valid
+                JSON or is not a JSON object.
+        """
         try:
             with open(config_file, "r") as file:
                 text = "".join(
@@ -139,6 +193,14 @@ class Engine:
         return options
 
     def _build_points(self, options: dict) -> PointsConfig:
+        """Build the points settings from ``points_per``.
+
+        Args:
+            options: Parsed config file.
+
+        Returns:
+            The points settings, with defaults for invalid values.
+        """
         raw = options.get("points_per")
         if not isinstance(raw, dict):
             self._warn("missing or invalid 'points_per', using defaults")
@@ -168,6 +230,15 @@ class Engine:
         )
 
     def _build_levels(self, options: dict) -> list[LevelConfig]:
+        """Build the list of levels from ``levels``.
+
+        Args:
+            options: Parsed config file.
+
+        Returns:
+            One setting per level, or one default level if the list is
+            missing or empty.
+        """
         raw_levels = options.get("levels")
         if not isinstance(raw_levels, list) or not raw_levels:
             self._warn("missing or empty 'levels', using one default level")
@@ -225,6 +296,14 @@ class Engine:
         return levels
 
     def _build_pacman_conf(self, options: dict) -> PacManConfig:
+        """Build Pac-Man's settings from ``pacman``.
+
+        Args:
+            options: Parsed config file.
+
+        Returns:
+            Pac-Man's settings, with the default sprite if invalid.
+        """
         raw = options.get("pacman")
         if not isinstance(raw, dict):
             self._warn("missing or invalid 'pacman', using defaults")
@@ -242,6 +321,14 @@ class Engine:
         )
 
     def load_conf(self, config_file: str) -> None:
+        """Load the config file into ``self.config``.
+
+        Args:
+            config_file: Path of the JSON config file.
+
+        Raises:
+            ConfigFileError: If the config file cannot be read.
+        """
         options = self._read_options(config_file)
         self.config = Config(
             levels=self._build_levels(options),

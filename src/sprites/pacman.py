@@ -3,6 +3,8 @@ from src.sprites.base import Sprite
 
 
 class PacMan(Sprite):
+    """The player's character."""
+
     def __init__(
         self,
         lives: int,
@@ -18,6 +20,23 @@ class PacMan(Sprite):
         target: tuple[int, int],
         progress: float,
     ) -> None:
+        """Create Pac-Man.
+
+        Args:
+            lives: Starting lives.
+            pos: Starting cell (x, y).
+            alive: Whether Pac-Man is alive.
+            visible: Whether Pac-Man is drawn.
+            dir: Current direction (up, down, left or right).
+            can_eat: Whether Pac-Man can eat ghosts.
+            next_dir: Direction requested by the player.
+            respawn_coord: Cell where Pac-Man respawns after losing a
+                life.
+            super_power: Whether a super pacgum effect is active.
+            sprite: Path of Pac-Man's image.
+            target: Cell Pac-Man is moving to.
+            progress: Progress of the move to the target, from 0 to 1.
+        """
         super().__init__(
             pos,
             visible,

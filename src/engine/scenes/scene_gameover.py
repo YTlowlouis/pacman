@@ -11,6 +11,12 @@ if TYPE_CHECKING:
 
 
 class GameOverScene(Scene):
+    """End screen, for both defeat and victory.
+
+    Shows the final score and asks for the player's name, then
+    shows the highscores.
+    """
+
     TEXT_COLOR = (250, 250, 0)
     BG_COLOR = (0, 0, 0)
     NAME_MAX = 10
@@ -18,6 +24,11 @@ class GameOverScene(Scene):
     FINAL_SCORE_Y = 190
 
     def __init__(self, engine: "Engine") -> None:
+        """Render the titles.
+
+        Args:
+            engine: Game engine owning the scenes.
+        """
         super().__init__(engine)
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 60)
         self.font_scores = pygame.font.Font("src/assets/sonicfont.ttf", 40)
@@ -31,6 +42,11 @@ class GameOverScene(Scene):
         self.winner_flag = False
 
     def handle_event(self, event: pygame.event.Event) -> None:
+        """Handle name typing, or go back to the menu with ESC.
+
+        Args:
+            event: Pygame event to handle.
+        """
         if self.entering_name:
             self._handle_name_input(event)
             return
@@ -40,9 +56,20 @@ class GameOverScene(Scene):
                 self.engine.change_scene(self.engine.scenes["Menu"])
 
     def update(self, dt: float) -> None:
+        """Blink the text caret.
+
+        Args:
+            dt: Elapsed time since the last frame, in seconds.
+        """
         self.caret_timer = (self.caret_timer + dt) % 1.0
 
     def draw(self, surface: pygame.surface.Surface) -> None:
+        """Draw the title, the final score and the name prompt or the
+        highscores.
+
+        Args:
+            surface: Surface to draw on.
+        """
         surface.fill(self.BG_COLOR)
         center_x = surface.get_width() // 2
         title = self.title_winner if self.winner_flag else self.title_loser
@@ -70,6 +97,13 @@ class GameOverScene(Scene):
             self._draw_scores(surface)
 
     def _handle_name_input(self, event: pygame.event.Event) -> None:
+        """Type the name: letters, digits and spaces only, 10 at most.
+
+        Backspace erases a character and Enter validates the name.
+
+        Args:
+            event: Pygame event to handle.
+        """
         if event.type == pygame.TEXTINPUT:
             for char in event.text:
                 if len(self.player_name) >= self.NAME_MAX:
@@ -83,6 +117,10 @@ class GameOverScene(Scene):
                 self._validate_name()
 
     def _validate_name(self) -> None:
+        """Save the score under the typed name.
+
+        An empty or invalid name is replaced by 'player'.
+        """
         name = self.player_name.strip() or "player"
         try:
             score = Score(name=name, score=self.final_score)
@@ -94,11 +132,21 @@ class GameOverScene(Scene):
         self.entering_name = False
 
     def savescore(self, score: Score) -> None:
+        """Save a score through the scoreboard scene.
+
+        Args:
+            score: Score to save.
+        """
         score_scene = self.engine.scenes["Score"]
         if isinstance(score_scene, ScoreBoard):
             score_scene.savescore(score)
 
     def _draw_scores(self, surface: pygame.surface.Surface) -> None:
+        """Draw the 10 best scores, centered.
+
+        Args:
+            surface: Surface to draw on.
+        """
         center_x = surface.get_width() // 2
         base_y = 250
 
@@ -116,12 +164,23 @@ class GameOverScene(Scene):
             )
 
     def loadscore(self) -> dict[str, int]:
+        """Load the scores through the scoreboard scene.
+
+        Returns:
+            The top 10 scores by player name.
+        """
         score_scene = self.engine.scenes["Score"]
         if isinstance(score_scene, ScoreBoard):
             return score_scene.loadscores()
         return {}
 
     def enter(self, final_score: int, winner_flag: bool) -> None:
+        """Prepare the screen for a finished game.
+
+        Args:
+            final_score: Score reached by the player.
+            winner_flag: True if every level was cleared.
+        """
         self.final_score = final_score
         self.winner_flag = winner_flag
         self.player_name = ""

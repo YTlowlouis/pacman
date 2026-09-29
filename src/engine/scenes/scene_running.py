@@ -21,6 +21,8 @@ if TYPE_CHECKING:
 
 
 class RunningScene(Scene):
+    """The game itself: maze, Pac-Man, ghosts, pacgums and HUD."""
+
     WALL_COLOR = (33, 33, 222)
     BG_COLOR = (0, 0, 0)
     SCORE_COLOR = (255, 255, 0)
@@ -58,6 +60,11 @@ class RunningScene(Scene):
     }
 
     def __init__(self, engine: "Engine") -> None:
+        """Load the sprites, create Pac-Man and load the first level.
+
+        Args:
+            engine: Game engine owning the scenes.
+        """
         super().__init__(engine)
         self.cell_size = 0
         self.origin = (0, 0)
@@ -111,6 +118,7 @@ class RunningScene(Scene):
         self.load_level(0)
 
     def _init_ghost(self) -> None:
+        """Create the four ghosts, one in each corner of the maze."""
         grid = self.maze.maze
         rows, cols = len(grid), len(grid[0])
         max_x, max_y = cols - 1, rows - 1
@@ -124,7 +132,14 @@ class RunningScene(Scene):
             ghost.image = pygame.image.load(ghost.sprite).convert_alpha()
 
     def _build_pacman(self) -> PacMan:
-        # La position est posee par load_level, qui seul connait le maze.
+        """Create Pac-Man from the config.
+
+        Its position is set later by ``load_level``, which is the only
+        method that knows the maze.
+
+        Returns:
+            The new Pac-Man.
+        """
         conf = self.engine.config.pacman
         return PacMan(
             lives=self.engine.config.lives,
@@ -142,6 +157,11 @@ class RunningScene(Scene):
         )
 
     def _build_pacgums(self) -> list[list[GameObject]]:
+        """Put a pacgum on every free cell and super pacgums in corners.
+
+        Returns:
+            The pacgums, indexed as ``[y][x]``.
+        """
         points = self.engine.config.points.pacgum
         points2 = self.engine.config.points.super_pacgum
         pacgums: list[list[GameObject]] = [
@@ -162,6 +182,16 @@ class RunningScene(Scene):
         return pacgums
 
     def _build_layer(self, size: tuple[int, int]) -> pygame.surface.Surface:
+        """Draw the maze walls once and compute the cell size.
+
+        Also sets the pixel origin of the maze, to center it.
+
+        Args:
+            size: Size of the surface, in pixels.
+
+        Returns:
+            A transparent surface with the walls.
+        """
         grid = self.maze.maze
         rows, cols = len(grid), len(grid[0])
         w, h = size
@@ -219,6 +249,7 @@ class RunningScene(Scene):
         return layer
 
     def _scale_sprites(self) -> None:
+        """Resize every sprite to the current cell size."""
         c = self.cell_size
         self.images = []
         for frame in self.pacman_sprites:
@@ -252,6 +283,11 @@ class RunningScene(Scene):
         self.ghost_offset = (c - ghost_size) // 2
 
     def handle_event(self, event: pygame.event.Event) -> None:
+        """Handle the movement, pause and cheat keys.
+
+        Args:
+            event: Pygame event to handle.
+        """
         if event.type == pygame.KEYDOWN:
             if event.key in self.KEY_TO_DIR:
                 self.pacman.next_dir = self.KEY_TO_DIR[event.key]
@@ -268,6 +304,11 @@ class RunningScene(Scene):
                 self.load_level(self.level_index + 1)
 
     def draw(self, surface: pygame.surface.Surface) -> None:
+        """Draw the maze, pacgums, Pac-Man, ghosts, HUD and fade.
+
+        Args:
+            surface: Surface to draw on.
+        """
         if self.layer is None:
             self.layer = self._build_layer(surface.get_size())
             self._scale_sprites()
@@ -284,6 +325,11 @@ class RunningScene(Scene):
             surface.blit(self.fade_veil, (0, 0))
 
     def _draw_pacgums(self, surface: pygame.surface.Surface) -> None:
+        """Draw the pacgums that have not been eaten.
+
+        Args:
+            surface: Surface to draw on.
+        """
         ox, oy = self.origin
         c = self.cell_size
         for row in self.pacgums:
@@ -307,6 +353,11 @@ class RunningScene(Scene):
                         )
 
     def _draw_pacman(self, surface: pygame.surface.Surface) -> None:
+        """Draw Pac-Man between its cell and its target.
+
+        Args:
+            surface: Surface to draw on.
+        """
         px, py = self.pacman.pos
         tx, ty = self.pacman.target
         progress = self.pacman.progress
@@ -319,6 +370,11 @@ class RunningScene(Scene):
         surface.blit(sprite, (round(ox + fx * c), round(oy + fy * c)))
 
     def _draw_ghost(self, surface: pygame.surface.Surface) -> None:
+        """Draw every visible ghost between its cell and its next cell.
+
+        Args:
+            surface: Surface to draw on.
+        """
         ox, oy = self.origin
         c = self.cell_size
 
@@ -342,6 +398,11 @@ class RunningScene(Scene):
                 )
 
     def _draw_hud(self, surface: pygame.surface.Surface) -> None:
+        """Draw the score, the level, the time left and the lives.
+
+        Args:
+            surface: Surface to draw on.
+        """
         x, y = self.SCORE_POS
         for text in (
             f"Score: {self.pacman.points}",
@@ -354,6 +415,11 @@ class RunningScene(Scene):
         self._draw_lives(surface)
 
     def _draw_lives(self, surface: pygame.surface.Surface) -> None:
+        """Draw one Pac-Man icon per life, in the top right corner.
+
+        Args:
+            surface: Surface to draw on.
+        """
         step = self.LIFE_ICON_SIZE + self.LIFE_SPACING
         right = surface.get_width() - self.HUD_MARGIN
         for i in range(max(0, self.pacman.lives)):
@@ -363,6 +429,17 @@ class RunningScene(Scene):
             )
 
     def _can_move(self, x: int, y: int, direction: str) -> bool:
+        """Check if a move from a cell is possible.
+
+        Args:
+            x: Cell column.
+            y: Cell row.
+            direction: up, down, left or right.
+
+        Returns:
+            True if the next cell is inside the maze and no wall is in
+            the way.
+        """
         dx, dy, wall_bit = self.DIRECTIONS[direction]
         nx, ny = x + dx, y + dy
         rows, cols = len(self.maze.maze), len(self.maze.maze[0])
@@ -371,6 +448,14 @@ class RunningScene(Scene):
         return bool((self.maze.maze[y][x] & wall_bit) == 0)
 
     def update(self, dt: float) -> None:
+        """Advance the game by one frame.
+
+        Handles the end-of-game fade, the timers, eating, the ghosts,
+        level completion and Pac-Man's movement.
+
+        Args:
+            dt: Elapsed time since the last frame, in seconds.
+        """
         if self.fade_target is not None:
             self.fade_alpha += 255.0 * dt / self.FADE_DURATION
             if self.fade_alpha >= 255.0:
@@ -426,6 +511,7 @@ class RunningScene(Scene):
             self.pacman.progress = 0.0
 
     def eat_pacgum(self) -> None:
+        """Eat the pacgum under Pac-Man, if any, and add its points."""
         x, y = self.pacman.pos
         gum = self.pacgums[y][x]
         if gum.visible:
@@ -436,6 +522,12 @@ class RunningScene(Scene):
             self.pacman.points += gum.points
 
     def eat_pacman(self) -> None:
+        """Handle Pac-Man touching ghosts.
+
+        A frightened ghost is eaten and gives points; any other ghost
+        costs a life. Nothing happens during the grace period after a
+        respawn.
+        """
         if self.ghost_grace_timer > 0.0:
             return
         for ghost in self.ghosts:
@@ -451,6 +543,11 @@ class RunningScene(Scene):
                 return
 
     def reset_ghost(self, ghost: Ghost) -> None:
+        """Send an eaten ghost back to its corner and start its timer.
+
+        Args:
+            ghost: Ghost that was eaten.
+        """
         ghost.alive = False
         ghost.visible = False
         ghost.pos = ghost.respawn_coord
@@ -460,6 +557,12 @@ class RunningScene(Scene):
         ghost.respawn_timer = self.GHOST_RESPAWN
 
     def _update_respawn(self, ghost: Ghost, dt: float) -> None:
+        """Count down a dead ghost's respawn timer, revive it at zero.
+
+        Args:
+            ghost: Dead ghost.
+            dt: Elapsed time since the last frame, in seconds.
+        """
         ghost.respawn_timer -= dt
         if ghost.respawn_timer > 0.0:
             return
@@ -469,6 +572,7 @@ class RunningScene(Scene):
         ghost.state = self.engine.wave_manager.current_state
 
     def _start_high(self) -> None:
+        """Start the super pacgum effect: living ghosts get frightened."""
         self.pacman.super_power = True
         self.is_high_timer = self.HIGH_TIMER
         for ghost in self.ghosts:
@@ -478,11 +582,17 @@ class RunningScene(Scene):
             self._reverse_ghost(ghost)
 
     def _end_frightened(self) -> None:
+        """End the super pacgum effect: ghosts go back to the wave phase."""
         for ghost in self.ghosts:
             if ghost.state == GhostState.FRIGHTENED:
                 ghost.state = self.engine.wave_manager.current_state
 
     def _reverse_ghost(self, ghost: Ghost) -> None:
+        """Make a ghost turn back right away, from where it is.
+
+        Args:
+            ghost: Ghost to turn back.
+        """
         if not ghost.dir or ghost.next_tile == ghost.pos:
             return
         ghost.pos, ghost.next_tile = ghost.next_tile, ghost.pos
@@ -490,6 +600,11 @@ class RunningScene(Scene):
         ghost.dir = self.OPPOSITE[ghost.dir]
 
     def load_level(self, index: int) -> None:
+        """Load a level, or end the game as a win after the last one.
+
+        Args:
+            index: Index of the level in the config.
+        """
         if index >= len(self.engine.config.levels):
             self._end_game(True)
             return
@@ -516,10 +631,13 @@ class RunningScene(Scene):
         self._reset_pacman()
 
     def _find_start_cell(self) -> tuple[int, int]:
-        """Cellule libre la plus proche du centre du labyrinthe.
+        """Find the free cell closest to the center of the maze.
 
-        Le centre exact est souvent un mur : MazeGenerator y grave un
-        motif '42' en cellules pleines.
+        The exact center is often a wall: MazeGenerator draws a '42'
+        pattern there with full cells.
+
+        Returns:
+            The start cell (x, y), or (0, 0) if no cell is free.
         """
         grid = self.maze.maze
         cx, cy = len(grid[0]) // 2, len(grid) // 2
@@ -534,6 +652,7 @@ class RunningScene(Scene):
         return min(free, key=lambda p: (p[0] - cx) ** 2 + (p[1] - cy) ** 2)
 
     def _reset_pacman(self) -> None:
+        """Put Pac-Man back on the start cell, facing the config direction."""
         conf = self.engine.config.pacman
         self.pacman.pos = self.start_pos
         self.pacman.target = self.start_pos
@@ -543,21 +662,37 @@ class RunningScene(Scene):
         self.pacman.next_dir = conf.next_dir
 
     def _game_over(self) -> None:
+        """End the game as a defeat."""
         self._end_game(False)
 
     def _end_game(self, winner: bool) -> None:
+        """Fade to the end screen with the final score.
+
+        Args:
+            winner: True if every level was cleared.
+        """
         gameover = self.engine.scenes["GameOver"]
         if isinstance(gameover, GameOverScene):
             gameover.enter(self.pacman.points, winner)
         self.fade_target = gameover
 
     def start_new_game(self) -> None:
+        """Reset the score and lives and load the first level."""
         self.pacman.points = 0
         self.pacman.lives = self.engine.config.lives
         self.pacman.alive = True
         self.load_level(0)
 
     def update_ghosts(self, dt: float) -> None:
+        """Move every ghost and pick its next direction on each new cell.
+
+        Scatter ghosts wander randomly, chase ghosts follow their
+        target and frightened ghosts flee, more slowly. Dead ghosts
+        wait for their respawn.
+
+        Args:
+            dt: Elapsed time since the last frame, in seconds.
+        """
         self.engine.wave_manager.update(dt, self.ghosts)
         pdx, pdy, _ = self.DIRECTIONS[self.pacman.dir]
         for ghost in self.ghosts:
@@ -591,6 +726,16 @@ class RunningScene(Scene):
                 ghost.progress = 0.0
 
     def _choose_random_dir(self, ghost: Ghost) -> str | None:
+        """Pick a random open direction, without turning back.
+
+        Turning back is only allowed in a dead end.
+
+        Args:
+            ghost: Ghost to move.
+
+        Returns:
+            The chosen direction, or None if the ghost is walled in.
+        """
         x, y = ghost.pos
         back = self.OPPOSITE.get(ghost.dir)
         choices = [
@@ -603,6 +748,16 @@ class RunningScene(Scene):
         return None
 
     def _choose_next_dir(self, ghost: Ghost) -> str | None:
+        """Pick the open direction that gets closest to the target.
+
+        Turning back is only allowed in a dead end.
+
+        Args:
+            ghost: Ghost to move.
+
+        Returns:
+            The chosen direction, or None if the ghost is walled in.
+        """
         x, y = ghost.pos
         tx, ty = ghost.target_tile
         back = self.OPPOSITE.get(ghost.dir)
@@ -623,6 +778,16 @@ class RunningScene(Scene):
         return best_dir
 
     def _choose_frightened_dir(self, ghost: Ghost) -> str | None:
+        """Pick the open direction that gets farthest from Pac-Man.
+
+        Turning back is only allowed in a dead end.
+
+        Args:
+            ghost: Ghost to move.
+
+        Returns:
+            The chosen direction, or None if the ghost is walled in.
+        """
         x, y = ghost.pos
         px, py = self.pacman.pos
         back = self.OPPOSITE.get(ghost.dir)
@@ -640,5 +805,17 @@ class RunningScene(Scene):
     def _dist_after(
         self, x: int, y: int, direction: str, tx: int, ty: int
     ) -> int:
+        """Squared distance to a point after one step in a direction.
+
+        Args:
+            x: Start column.
+            y: Start row.
+            direction: Direction of the step.
+            tx: Column of the point.
+            ty: Row of the point.
+
+        Returns:
+            The squared distance.
+        """
         dx, dy, _ = self.DIRECTIONS[direction]
         return (x + dx - tx) ** 2 + (y + dy - ty) ** 2
