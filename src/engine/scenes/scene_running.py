@@ -498,7 +498,6 @@ class RunningScene(Scene):
             self.current_pacman_sprite = 1
         else:
             self.current_pacman_sprite = 0
-        print(self.pacman.pos)
 
         x, y = self.pacman.pos
         if self._can_move(x, y, self.pacman.next_dir):
