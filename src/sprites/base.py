@@ -19,7 +19,6 @@ class Sprite:
     def __init__(
         self,
         pos: tuple[int, int],
-        points_given: int,
         visible: bool,
         sprite: str,
         lives: int,
@@ -34,7 +33,6 @@ class Sprite:
         progress: float,
     ) -> None:
         self.pos = pos
-        self.points_given = points_given
         self.visible = visible
         self.sprite = sprite
         self.lives = lives

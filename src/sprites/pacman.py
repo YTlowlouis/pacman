@@ -20,7 +20,6 @@ class PacMan(Sprite):
     ) -> None:
         super().__init__(
             pos,
-            0,
             visible,
             str(sprite),
             lives,

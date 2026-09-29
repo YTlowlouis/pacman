@@ -39,11 +39,6 @@ class GameOverScene(Scene):
             if event.key == pygame.K_ESCAPE:
                 self.engine.change_scene(self.engine.scenes["Menu"])
 
-    #            elif event.key == pygame.K_r:
-    #                running_scene = self.engine.scenes["Running"]
-    #                running_scene.start_new_game()
-    #                self.engine.change_scene(running_scene)
-
     def update(self, dt: float) -> None:
         self.caret_timer = (self.caret_timer + dt) % 1.0
 

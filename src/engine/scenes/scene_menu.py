@@ -42,6 +42,10 @@ class MenuScene(Scene):
                     self.engine.change_scene(running_scene)
                 elif self.param_choice == 1:
                     self.engine.change_scene(self.engine.scenes["Score"])
+                elif self.param_choice == 2:
+                    self.engine.change_scene(
+                        self.engine.scenes["Instructions"]
+                    )
                 elif self.param_choice == 3:
                     self.engine.running = False
 

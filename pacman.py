@@ -1,6 +1,5 @@
 import argparse
 from src.engine.engine import Engine, ConfigFileError
-from src.engine.scenes.scene_scoreboard import ScoreFileError
 
 
 class Main:
@@ -12,7 +11,7 @@ class Main:
 
         try:
             self.engine = Engine(config_file)
-        except (ConfigFileError, ScoreFileError) as e:
+        except ConfigFileError as e:
             print(e)
             exit(1)
 

@@ -107,8 +107,6 @@ class RunningScene(Scene):
 
         self.cheat_mode = False
         self.lives_lost = 1
-        self.die_when_touched = True
-        self.ghost_move = True
 
         self.load_level(0)
 
@@ -444,6 +442,7 @@ class RunningScene(Scene):
             if not ghost.alive or ghost.pos != self.pacman.pos:
                 continue
             if ghost.state == GhostState.FRIGHTENED:
+                self.pacman.points += self.engine.config.points.ghost
                 self.reset_ghost(ghost)
             else:
                 self.pacman.lives -= self.lives_lost
@@ -578,6 +577,8 @@ class RunningScene(Scene):
             ghost.progress -= 1.0
             if frightened:
                 next_dir = self._choose_frightened_dir(ghost)
+            elif ghost.state == GhostState.SCATTER:
+                next_dir = self._choose_random_dir(ghost)
             else:
                 ghost.update_target(self.pacman.pos, (pdx, pdy))
                 next_dir = self._choose_next_dir(ghost)
@@ -588,6 +589,18 @@ class RunningScene(Scene):
             else:
                 ghost.next_tile = ghost.pos
                 ghost.progress = 0.0
+
+    def _choose_random_dir(self, ghost: Ghost) -> str | None:
+        x, y = ghost.pos
+        back = self.OPPOSITE.get(ghost.dir)
+        choices = [
+            d for d in self.DIRECTIONS if d != back and self._can_move(x, y, d)
+        ]
+        if choices:
+            return random.choice(choices)
+        if back and self._can_move(x, y, back):
+            return back
+        return None
 
     def _choose_next_dir(self, ghost: Ghost) -> str | None:
         x, y = ghost.pos
@@ -610,15 +623,22 @@ class RunningScene(Scene):
         return best_dir
 
     def _choose_frightened_dir(self, ghost: Ghost) -> str | None:
-        """Direction aleatoire parmi les couloirs ouverts, sans demi-tour
-        sauf en cul-de-sac (comportement de l'arcade)."""
         x, y = ghost.pos
+        px, py = self.pacman.pos
         back = self.OPPOSITE.get(ghost.dir)
         choices = [
             d for d in self.DIRECTIONS if d != back and self._can_move(x, y, d)
         ]
         if choices:
-            return random.choice(choices)
+            return max(
+                choices, key=lambda d: self._dist_after(x, y, d, px, py)
+            )
         if back and self._can_move(x, y, back):
             return back
         return None
+
+    def _dist_after(
+        self, x: int, y: int, direction: str, tx: int, ty: int
+    ) -> int:
+        dx, dy, _ = self.DIRECTIONS[direction]
+        return (x + dx - tx) ** 2 + (y + dy - ty) ** 2
