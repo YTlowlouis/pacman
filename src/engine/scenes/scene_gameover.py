@@ -10,10 +10,6 @@ if TYPE_CHECKING:
     from src.engine.engine import Engine
 
 
-class NameError(Exception):
-    pass
-
-
 class GameOverScene(Scene):
     TEXT_COLOR = (250, 250, 0)
     BG_COLOR = (0, 0, 0)
@@ -25,12 +21,14 @@ class GameOverScene(Scene):
         super().__init__(engine)
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 60)
         self.font_scores = pygame.font.Font("src/assets/sonicfont.ttf", 40)
-        self.title = self.font.render("GAME OVER", True, self.TEXT_COLOR)
+        self.title_loser = self.font.render("GAME OVER", True, self.TEXT_COLOR)
+        self.title_winner = self.font.render("VICTORY", True, self.TEXT_COLOR)
 
         self.entering_name = False
         self.player_name = ""
         self.caret_timer = 0.0
         self.final_score = 0
+        self.winner_flag = False
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if self.entering_name:
@@ -52,9 +50,10 @@ class GameOverScene(Scene):
     def draw(self, surface: pygame.surface.Surface) -> None:
         surface.fill(self.BG_COLOR)
         center_x = surface.get_width() // 2
+        title = self.title_winner if self.winner_flag else self.title_loser
         surface.blit(
-            self.title,
-            (center_x - self.title.get_width() // 2, self.TITLE_Y),
+            title,
+            (center_x - title.get_width() // 2, self.TITLE_Y),
         )
         final = self.font_scores.render(
             f"Your score: {self.final_score}", True, self.TEXT_COLOR
@@ -77,8 +76,11 @@ class GameOverScene(Scene):
 
     def _handle_name_input(self, event: pygame.event.Event) -> None:
         if event.type == pygame.TEXTINPUT:
-            if len(self.player_name) < self.NAME_MAX:
-                self.player_name += event.text
+            for char in event.text:
+                if len(self.player_name) >= self.NAME_MAX:
+                    break
+                if char.isalnum() or char == " ":
+                    self.player_name += char
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSPACE:
                 self.player_name = self.player_name[:-1]
@@ -90,7 +92,8 @@ class GameOverScene(Scene):
         try:
             score = Score(name=name, score=self.final_score)
         except ValidationError:
-            raise NameError(f"Invalid name: {name}, setting name to 'player'")
+            print(f"Invalid name: {name}, setting name to 'player'")
+            score = Score(name="player", score=self.final_score)
         self.savescore(score)
         self.scores = self.loadscore()
         self.entering_name = False
@@ -123,8 +126,9 @@ class GameOverScene(Scene):
             return score_scene.loadscores()
         return {}
 
-    def enter(self, final_score: int) -> None:
+    def enter(self, final_score: int, winner_flag: bool) -> None:
         self.final_score = final_score
+        self.winner_flag = winner_flag
         self.player_name = ""
         self.entering_name = True
         self.scores = self.loadscore()
