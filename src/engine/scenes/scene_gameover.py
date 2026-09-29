@@ -1,8 +1,13 @@
+from typing import TYPE_CHECKING
 from pydantic import ValidationError
 import pygame
 
 from src.engine.scenes.scene_baseclass import Scene
+from src.engine.scenes.scene_scoreboard import ScoreBoard
 from src.models.scoreboard_models import Score
+
+if TYPE_CHECKING:
+    from src.engine.engine import Engine
 
 
 class NameError(Exception):
@@ -16,7 +21,7 @@ class GameOverScene(Scene):
     TITLE_Y = 100
     FINAL_SCORE_Y = 190
 
-    def __init__(self, engine):
+    def __init__(self, engine: "Engine") -> None:
         super().__init__(engine)
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 60)
         self.font_scores = pygame.font.Font("src/assets/sonicfont.ttf", 40)
@@ -44,7 +49,7 @@ class GameOverScene(Scene):
     def update(self, dt: float) -> None:
         self.caret_timer = (self.caret_timer + dt) % 1.0
 
-    def draw(self, surface: pygame.Surface) -> None:
+    def draw(self, surface: pygame.surface.Surface) -> None:
         surface.fill(self.BG_COLOR)
         center_x = surface.get_width() // 2
         surface.blit(
@@ -91,9 +96,11 @@ class GameOverScene(Scene):
         self.entering_name = False
 
     def savescore(self, score: Score) -> None:
-        self.engine.scenes["Score"].savescore(score)
+        score_scene = self.engine.scenes["Score"]
+        if isinstance(score_scene, ScoreBoard):
+            score_scene.savescore(score)
 
-    def _draw_scores(self, surface: pygame.Surface) -> None:
+    def _draw_scores(self, surface: pygame.surface.Surface) -> None:
         center_x = surface.get_width() // 2
         base_y = 250
 
@@ -112,7 +119,9 @@ class GameOverScene(Scene):
 
     def loadscore(self) -> dict[str, int]:
         score_scene = self.engine.scenes["Score"]
-        return score_scene.loadscores()
+        if isinstance(score_scene, ScoreBoard):
+            return score_scene.loadscores()
+        return {}
 
     def enter(self, final_score: int) -> None:
         self.final_score = final_score

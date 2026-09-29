@@ -24,7 +24,7 @@ class Ghost(Sprite):
         scatter_target: tuple[int, int],
         tile_size: int,
         progress: float = 0.0,
-        image: pygame.Surface | None = None,
+        image: pygame.surface.Surface | None = None,
     ) -> None:
         super().__init__(
             pos,

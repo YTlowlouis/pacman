@@ -108,7 +108,7 @@ class Engine:
         if maximum is not None and value > maximum:
             self._warn(f"{where}'{key}' {value} clamped to {maximum}")
             return maximum
-        return value
+        return int(value)
 
     def _read_options(self, config_file: str) -> dict:
         try:

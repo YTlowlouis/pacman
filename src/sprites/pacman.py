@@ -1,5 +1,5 @@
 from pathlib import Path
-from src.sprites.base import Sprite  # type: ignore
+from src.sprites.base import Sprite
 
 
 class PacMan(Sprite):
@@ -22,7 +22,7 @@ class PacMan(Sprite):
             pos,
             0,
             visible,
-            sprite,
+            str(sprite),
             lives,
             alive,
             dir,
@@ -34,6 +34,7 @@ class PacMan(Sprite):
             target,
             progress,
         )
+        self.target: tuple[int, int] = target
         self.points: int = 0
         self.VALID_DIRECTIONS = {"up", "down", "right", "left"}
 

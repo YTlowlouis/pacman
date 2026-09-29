@@ -1,9 +1,13 @@
+from typing import TYPE_CHECKING
 import pygame
 from src.engine.scenes.scene_baseclass import Scene
 
+if TYPE_CHECKING:
+    from src.engine.engine import Engine
+
 
 class PauseScene(Scene):
-    def __init__(self, engine) -> None:
+    def __init__(self, engine: "Engine") -> None:
         super().__init__(engine)
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
         self.text_font = pygame.font.Font("src/assets/sonicfont.ttf", 26)
@@ -15,7 +19,7 @@ class PauseScene(Scene):
         self.menu_text = self.text_font.render("Press M for Main Menu",
                                                True, (200, 200, 200))
 
-        self.background_snapshot: pygame.Surface | None = None
+        self.background_snapshot: pygame.surface.Surface | None = None
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN:
@@ -27,7 +31,7 @@ class PauseScene(Scene):
     def update(self, dt: float) -> None:
         pass
 
-    def draw(self, surface: pygame.Surface) -> None:
+    def draw(self, surface: pygame.surface.Surface) -> None:
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
         if self.background_snapshot:
             surface.blit(self.background_snapshot, (0, 0))

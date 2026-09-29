@@ -1,6 +1,3 @@
-from pathlib import Path
-
-
 class GameObject:
     def __init__(
         self, pos: tuple[int, int], points: int, visible: bool, sprite: str

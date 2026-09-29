@@ -1,8 +1,12 @@
+from typing import TYPE_CHECKING
 import pygame
 from pydantic import ValidationError
 import json
 from src.engine.scenes.scene_baseclass import Scene
 from src.models.scoreboard_models import Score
+
+if TYPE_CHECKING:
+    from src.engine.engine import Engine
 
 
 class ScoreFileError(Exception):
@@ -13,9 +17,9 @@ class ScoreBoard(Scene):
     SCORE_FILE = "scores.json"
     TOP = 10
 
-    def __init__(self, engine):
+    def __init__(self, engine: "Engine") -> None:
         super().__init__(engine)
-        self.font = pygame.font.Font("src/assets/sonicfont.ttf")
+        self.font = pygame.font.Font("src/assets/sonicfont.ttf", 20)
         self.font_title = pygame.font.Font(None, 70)
         self.scores: dict = {}
         self.loadscores()
@@ -30,7 +34,7 @@ class ScoreBoard(Scene):
     def update(self, dt: float) -> None:
         pass
 
-    def draw(self, surface: pygame.Surface) -> None:
+    def draw(self, surface: pygame.surface.Surface) -> None:
         surface.fill((0, 0, 0))
 
         surface.blit(
@@ -43,7 +47,7 @@ class ScoreBoard(Scene):
         )
         self._draw_10_scores(surface)
 
-    def _draw_10_scores(self, surface: pygame.Surface) -> None:
+    def _draw_10_scores(self, surface: pygame.surface.Surface) -> None:
         center_x = surface.get_width() // 2
         base_y = 200
         for count, text in enumerate(self.fonted_scores):

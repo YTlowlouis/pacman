@@ -9,7 +9,7 @@ class Blinky(Ghost):
         sprite: str,
         tile_size: int = 32,
         progress: float = 0.0,
-        image: pygame.Surface | None = None,
+        image: pygame.surface.Surface | None = None,
     ) -> None:
         super().__init__(
             pos,
@@ -42,7 +42,7 @@ class Pinky(Ghost):
         sprite: str,
         tile_size: int = 32,
         progress: float = 0.0,
-        image: pygame.Surface | None = None,
+        image: pygame.surface.Surface | None = None,
     ) -> None:
         super().__init__(
             pos,
@@ -78,7 +78,7 @@ class Inky(Ghost):
         blinky_ref: Ghost | None = None,
         tile_size: int = 32,
         progress: float = 0.0,
-        image: pygame.Surface | None = None,
+        image: pygame.surface.Surface | None = None,
     ) -> None:
         super().__init__(
             pos,
@@ -119,7 +119,7 @@ class Clyde(Ghost):
         sprite: str,
         tile_size: int = 32,
         progress: float = 0.0,
-        image: pygame.Surface | None = None,
+        image: pygame.surface.Surface | None = None,
     ) -> None:
         super().__init__(
             pos,

@@ -1,11 +1,17 @@
+from typing import TYPE_CHECKING
 import pygame
 
 from src.engine.scenes.scene_baseclass import Scene
+from src.engine.scenes.scene_running import RunningScene
+
+if TYPE_CHECKING:
+    from src.engine.engine import Engine
 
 
 class MenuScene(Scene):
-    def __init__(self, engine):
+    def __init__(self, engine: "Engine") -> None:
         super().__init__(engine)
+        self.cursor_pos_index = 0
         self._init_fixed()
         self.param_choice = 0
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
@@ -31,7 +37,8 @@ class MenuScene(Scene):
             elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
                 if self.param_choice == 0:
                     running_scene = self.engine.scenes["Running"]
-                    running_scene.start_new_game()
+                    if isinstance(running_scene, RunningScene):
+                        running_scene.start_new_game()
                     self.engine.change_scene(running_scene)
                 elif self.param_choice == 1:
                     self.engine.change_scene(self.engine.scenes["Score"])
@@ -41,7 +48,7 @@ class MenuScene(Scene):
     def update(self, dt: float) -> None:
         pass
 
-    def draw(self, surface: pygame.Surface) -> None:
+    def draw(self, surface: pygame.surface.Surface) -> None:
         self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
         surface.fill((0, 0, 0))
 
@@ -57,11 +64,23 @@ class MenuScene(Scene):
         self.title = pygame.image.load(
             "src/assets/screentitle.png"
         ).convert_alpha()
-        self.title = pygame.transform.scale_by(self.title, 0.3)
+        self.title = pygame.transform.scale(
+            self.title,
+            (
+                int(self.title.get_width() * 0.3),
+                int(self.title.get_height() * 0.3),
+            ),
+        )
         self.cursor = pygame.image.load(
             "src/assets/cursor.png"
         ).convert_alpha()
-        self.cursor = pygame.transform.scale_by(self.cursor, 0.1)
+        self.cursor = pygame.transform.scale(
+            self.cursor,
+            (
+                int(self.cursor.get_width() * 0.1),
+                int(self.cursor.get_height() * 0.1),
+            ),
+        )
 
         self.play_text = self.font.render("PLAY", True, (250, 250, 0))
         self.score_board_text = self.font.render(
