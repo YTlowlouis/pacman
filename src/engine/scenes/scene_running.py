@@ -1,10 +1,12 @@
 from typing import TYPE_CHECKING
+import random
 import pygame
 
 from mazegenerator import MazeGenerator
 from src.engine.scenes.scene_baseclass import Scene
 from src.engine.wave_manager import WaveManager
 from src.sprites.sprites import Inky, Pinky, Clyde, Blinky, Ghost
+from src.sprites.ghost import GhostState
 from src.sprites.pacman import PacMan
 from src.sprites.items import PacGum, SuperPacGum
 from src.sprites.base import GameObject
@@ -39,11 +41,12 @@ class RunningScene(Scene):
     OPPOSITE = {"up": "down", "down": "up", "left": "right", "right": "left"}
     MOVES_PER_SECOND = 6.0
     GHOST_PER_SECOND = 4.5
+    FRIGHTENED_PER_SECOND = 2.5
     GUM_RATIO = 0.5
     SUPER_GUM_RATIO = 1.6
     GHOST_MARGIN = 10
     FADE_DURATION = 0.8
-    HIGH_TIMER = 3.0
+    HIGH_TIMER = 8.0
     GHOST_GRACE = 2.0
     GHOST_RESPAWN = 5.0
 
@@ -257,9 +260,7 @@ class RunningScene(Scene):
             if event.key == pygame.K_ESCAPE:
                 pause_scene = self.engine.scenes["Pause"]
                 if isinstance(pause_scene, PauseScene):
-                    pause_scene.background_snapshot = (
-                        self.engine.screen.copy()
-                    )
+                    pause_scene.background_snapshot = self.engine.screen.copy()
                 self.engine.change_scene(pause_scene)
             if event.key == pygame.K_c:
                 self.cheat_mode = True
@@ -387,6 +388,7 @@ class RunningScene(Scene):
             if self.is_high_timer <= 0.0:
                 self.is_high_timer = 0.0
                 self.pacman.super_power = False
+                self._end_frightened()
 
         if self.ghost_grace_timer > 0.0:
             self.ghost_grace_timer = max(0.0, self.ghost_grace_timer - dt)
@@ -441,7 +443,7 @@ class RunningScene(Scene):
         for ghost in self.ghosts:
             if not ghost.alive or ghost.pos != self.pacman.pos:
                 continue
-            if self.pacman.super_power:
+            if ghost.state == GhostState.FRIGHTENED:
                 self.reset_ghost(ghost)
             else:
                 self.pacman.lives -= self.lives_lost
@@ -470,6 +472,23 @@ class RunningScene(Scene):
     def _start_high(self) -> None:
         self.pacman.super_power = True
         self.is_high_timer = self.HIGH_TIMER
+        for ghost in self.ghosts:
+            if not ghost.alive or ghost.state == GhostState.FRIGHTENED:
+                continue
+            ghost.state = GhostState.FRIGHTENED
+            self._reverse_ghost(ghost)
+
+    def _end_frightened(self) -> None:
+        for ghost in self.ghosts:
+            if ghost.state == GhostState.FRIGHTENED:
+                ghost.state = self.engine.wave_manager.current_state
+
+    def _reverse_ghost(self, ghost: Ghost) -> None:
+        if not ghost.dir or ghost.next_tile == ghost.pos:
+            return
+        ghost.pos, ghost.next_tile = ghost.next_tile, ghost.pos
+        ghost.progress = 1.0 - ghost.progress
+        ghost.dir = self.OPPOSITE[ghost.dir]
 
     def load_level(self, index: int) -> None:
         if index >= len(self.engine.config.levels):
@@ -485,6 +504,8 @@ class RunningScene(Scene):
         self.layer = None
         self._init_ghost()
         self.engine.wave_manager = WaveManager()
+        self.pacman.super_power = False
+        self.is_high_timer = 0.0
         self.pacgums = self._build_pacgums()
         self.remaining_gums = sum(
             gum.visible for row in self.pacgums for gum in row
@@ -541,13 +562,22 @@ class RunningScene(Scene):
             if not ghost.alive:
                 self._update_respawn(ghost, dt)
                 continue
-            ghost.progress += dt * self.GHOST_PER_SECOND
+            frightened = ghost.state == GhostState.FRIGHTENED
+            speed = (
+                self.FRIGHTENED_PER_SECOND
+                if frightened
+                else self.GHOST_PER_SECOND
+            )
+            ghost.progress += dt * speed
             if ghost.progress < 1.0:
                 continue
             ghost.pos = ghost.next_tile
             ghost.progress -= 1.0
-            ghost.update_target(self.pacman.pos, (pdx, pdy))
-            next_dir = self._choose_next_dir(ghost)
+            if frightened:
+                next_dir = self._choose_frightened_dir(ghost)
+            else:
+                ghost.update_target(self.pacman.pos, (pdx, pdy))
+                next_dir = self._choose_next_dir(ghost)
             if next_dir:
                 ghost.dir = next_dir
                 dx, dy, _ = self.DIRECTIONS[ghost.dir]
@@ -575,3 +605,17 @@ class RunningScene(Scene):
         if best_dir is None and back and self._can_move(x, y, back):
             best_dir = back
         return best_dir
+
+    def _choose_frightened_dir(self, ghost: Ghost) -> str | None:
+        """Direction aleatoire parmi les couloirs ouverts, sans demi-tour
+        sauf en cul-de-sac (comportement de l'arcade)."""
+        x, y = ghost.pos
+        back = self.OPPOSITE.get(ghost.dir)
+        choices = [
+            d for d in self.DIRECTIONS if d != back and self._can_move(x, y, d)
+        ]
+        if choices:
+            return random.choice(choices)
+        if back and self._can_move(x, y, back):
+            return back
+        return None
