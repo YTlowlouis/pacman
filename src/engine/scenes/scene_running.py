@@ -45,6 +45,7 @@ class RunningScene(Scene):
     FADE_DURATION = 0.8
     HIGH_TIMER = 3.0
     GHOST_GRACE = 2.0
+    GHOST_RESPAWN = 5.0
 
     KEY_TO_DIR = {
         pygame.K_UP: "up",
@@ -111,7 +112,7 @@ class RunningScene(Scene):
     def _init_ghost(self) -> None:
         grid = self.maze.maze
         rows, cols = len(grid), len(grid[0])
-        max_x, max_y = rows - 1, cols - 1
+        max_x, max_y = cols - 1, rows - 1
         blinky = Blinky((max_x, 0), ("src/assets/Blinky.png"))
         pinky = Pinky((0, 0), ("src/assets/Pinky.png"))
         inky = Inky((0, max_y), ("src/assets/Inky.png"), blinky)
@@ -438,7 +439,7 @@ class RunningScene(Scene):
         if self.ghost_grace_timer > 0.0:
             return
         for ghost in self.ghosts:
-            if ghost.pos != self.pacman.pos:
+            if not ghost.alive or ghost.pos != self.pacman.pos:
                 continue
             if self.pacman.super_power:
                 self.reset_ghost(ghost)
@@ -449,9 +450,22 @@ class RunningScene(Scene):
                 return
 
     def reset_ghost(self, ghost: Ghost) -> None:
+        ghost.alive = False
         ghost.visible = False
-        ghost.pos = (0, 0)
+        ghost.pos = ghost.respawn_coord
+        ghost.next_tile = ghost.respawn_coord
+        ghost.progress = 0.0
+        ghost.dir = ""
+        ghost.respawn_timer = self.GHOST_RESPAWN
+
+    def _update_respawn(self, ghost: Ghost, dt: float) -> None:
+        ghost.respawn_timer -= dt
+        if ghost.respawn_timer > 0.0:
+            return
+        ghost.respawn_timer = 0.0
+        ghost.alive = True
         ghost.visible = True
+        ghost.state = self.engine.wave_manager.current_state
 
     def _start_high(self) -> None:
         self.pacman.super_power = True
@@ -524,6 +538,9 @@ class RunningScene(Scene):
         self.engine.wave_manager.update(dt, self.ghosts)
         pdx, pdy, _ = self.DIRECTIONS[self.pacman.dir]
         for ghost in self.ghosts:
+            if not ghost.alive:
+                self._update_respawn(ghost, dt)
+                continue
             ghost.progress += dt * self.GHOST_PER_SECOND
             if ghost.progress < 1.0:
                 continue

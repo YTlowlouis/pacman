@@ -49,6 +49,7 @@ class Ghost(Sprite):
         self.state = GhostState.SCATTER
         self.target_tile = scatter_target
         self.next_tile = pos
+        self.respawn_timer = 0.0
 
     def update_target(
         self, pacman_pos: tuple[int, int], pacman_dir: tuple[int, int]
