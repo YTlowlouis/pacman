@@ -29,7 +29,6 @@
 	"lives": "trois",
 
 	"pacman": {
-		"pos": [1, 2, 3],
 		"dir": "diagonal",
 		"sprite": 42
 	},

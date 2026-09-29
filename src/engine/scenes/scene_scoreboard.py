@@ -1,8 +1,12 @@
+from typing import TYPE_CHECKING
 import pygame
 from pydantic import ValidationError
 import json
 from src.engine.scenes.scene_baseclass import Scene
 from src.models.scoreboard_models import Score
+
+if TYPE_CHECKING:
+    from src.engine.engine import Engine
 
 
 class ScoreFileError(Exception):
@@ -10,9 +14,12 @@ class ScoreFileError(Exception):
 
 
 class ScoreBoard(Scene):
-    def __init__(self, engine):
+    SCORE_FILE = "scores.json"
+    TOP = 10
+
+    def __init__(self, engine: "Engine") -> None:
         super().__init__(engine)
-        self.font = pygame.font.Font("src/assets/sonicfont.ttf")
+        self.font = pygame.font.Font("src/assets/sonicfont.ttf", 20)
         self.font_title = pygame.font.Font(None, 70)
         self.scores: dict = {}
         self.loadscores()
@@ -27,7 +34,7 @@ class ScoreBoard(Scene):
     def update(self, dt: float) -> None:
         pass
 
-    def draw(self, surface: pygame.Surface) -> None:
+    def draw(self, surface: pygame.surface.Surface) -> None:
         surface.fill((0, 0, 0))
 
         surface.blit(
@@ -40,7 +47,7 @@ class ScoreBoard(Scene):
         )
         self._draw_10_scores(surface)
 
-    def _draw_10_scores(self, surface: pygame.Surface) -> None:
+    def _draw_10_scores(self, surface: pygame.surface.Surface) -> None:
         center_x = surface.get_width() // 2
         base_y = 200
         for count, text in enumerate(self.fonted_scores):
@@ -53,34 +60,34 @@ class ScoreBoard(Scene):
 
     def loadscores(self) -> dict[str, int]:
         try:
-            with open("scores.json", "r") as f:
-                content = json.load(f)
-        except json.decoder.JSONDecodeError:
-            raise ScoreFileError("Invalid json in score file")
+            with open(self.SCORE_FILE, "r") as f:
+                text = f.read()
         except FileNotFoundError:
-            print("scores.json doesn't exist, creating .....")
-            with open("scores.json", "w") as f:
-                f.write("")
+            print(f"{self.SCORE_FILE} doesn't exist, starting with no score")
+            text = ""
         except PermissionError:
-            raise ScoreFileError("No peermission to open score file")
+            raise ScoreFileError("No permission to open score file")
         except OSError as e:
             raise ScoreFileError(f"Error while loading score file: {e}")
 
-        with open("scores.json", "r") as f:
-            content = json.load(f)
-            self.scores = {player: score for player, score in content.items()}
+        if not text.strip():
+            content: object = {}
+        else:
             try:
-                for player, score in self.scores.items():
-                    score = Score(name=player, score=score)
-            except ValidationError as e:
-                raise ScoreFileError(e)
+                content = json.loads(text)
+            except json.JSONDecodeError:
+                raise ScoreFileError("Invalid json in score file")
 
-            self.scores = {
-                player: score
-                for player, score in sorted(
-                    self.scores.items(), key=lambda item: item[1], reverse=True
-                )
-            }
+        if not isinstance(content, dict):
+            raise ScoreFileError("Score file must contain a json object")
+
+        try:
+            scores = [Score(name=n, score=s) for n, s in content.items()]
+        except ValidationError as e:
+            raise ScoreFileError(f"Invalid score file: {e}")
+
+        scores.sort(key=lambda s: s.score, reverse=True)
+        self.scores = {s.name: s.score for s in scores}
         self.loadscores_text()
         return self.scores
 
@@ -95,10 +102,12 @@ class ScoreBoard(Scene):
             score.score, self.scores.get(score.name, 0)
         )
         self.scores = dict(
-            sorted(self.scores.items(), key=lambda i: i[1], reverse=True)[:10]
+            sorted(self.scores.items(), key=lambda i: i[1], reverse=True)[
+                : self.TOP
+            ]
         )
         try:
-            with open("scores.json", "w") as f:
+            with open(self.SCORE_FILE, "w") as f:
                 json.dump(self.scores, f, indent=2)
         except OSError as e:
             raise ScoreFileError(f"Error while saving score file: {e}")
