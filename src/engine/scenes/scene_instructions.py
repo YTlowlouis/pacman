@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 import pygame
 
 from src.engine.scenes.scene_baseclass import Scene
+from src.utils import get_resource_path
 
 if TYPE_CHECKING:
     from src.engine.engine import Engine
@@ -55,9 +56,10 @@ class InstructionsScene(Scene):
             engine: Game engine owning the scenes.
         """
         super().__init__(engine)
-        font_title = pygame.font.Font("src/assets/sonicfont.ttf", 60)
-        font_header = pygame.font.Font("src/assets/sonicfont.ttf", 32)
-        font_text = pygame.font.Font("src/assets/sonicfont.ttf", 22)
+        chemin_police = get_resource_path("src/assets/sonicfont.ttf")
+        font_title = pygame.font.Font(chemin_police, 60)
+        font_header = pygame.font.Font(chemin_police, 32)
+        font_text = pygame.font.Font(chemin_police, 22)
 
         self.title = font_title.render(
             "INSTRUCTIONS", True, self.TITLE_COLOR

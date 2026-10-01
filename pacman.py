@@ -1,4 +1,5 @@
 import argparse
+import sys
 from src.engine.engine import Engine, ConfigFileError
 
 
@@ -20,7 +21,7 @@ class Main:
             self.engine = Engine(config_file)
         except ConfigFileError as e:
             print(e)
-            exit(1)
+            sys.exit(1)
 
     def start(self) -> None:
         """Run the game loop until the window is closed."""

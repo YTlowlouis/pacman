@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 import pygame
+import sys
+import os
 
 from src.models import Config, PointsConfig, LevelConfig, PacManConfig
 from src.engine.scenes.scene_menu import MenuScene
@@ -65,6 +67,12 @@ class Engine:
             "Instructions": InstructionsScene(self),
         }
         self._next_scene: Scene | None = None
+
+    @staticmethod
+    def get_resource_path(relative_path: str) -> str:
+        if hasattr(sys, '_MEIPASS'):
+            return os.path.join(sys._MEIPASS, relative_path)
+        return os.path.join(os.path.abspath("."), relative_path)
 
     def run(self) -> None:
         """Run the game loop until the player quits.
@@ -166,7 +174,8 @@ class Engine:
                 JSON or is not a JSON object.
         """
         try:
-            with open(config_file, "r") as file:
+            config_path = self.get_resource_path(config_file)
+            with open(config_path, "r") as file:
                 text = "".join(
                     line for line in file if not line.lstrip().startswith("#")
                 )

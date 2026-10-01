@@ -12,6 +12,7 @@ from src.sprites.items import PacGum, SuperPacGum
 from src.sprites.base import GameObject
 from src.engine.scenes.scene_pause import PauseScene
 from src.engine.scenes.scene_gameover import GameOverScene
+from src.utils import get_resource_path
 
 """ from src.sprites.ghost import Ghost
 from src.sprites.sprites import Blinky, Pinky, Inky, Clyde """
@@ -69,25 +70,26 @@ class RunningScene(Scene):
         self.cell_size = 0
         self.origin = (0, 0)
         self.layer: pygame.surface.Surface | None = None
-        self.font_score = pygame.font.Font("src/assets/sonicfont.ttf", 28)
+        chemin_police = get_resource_path("src/assets/sonicfont.ttf")
+        self.font_score = pygame.font.Font(chemin_police, 28)
         self.maze: MazeGenerator
 
-        self.pacman_sprite_open = pygame.image.load(
-            "src/assets/open_pacman.png"
+        self.pacman_sprite_open = pygame.image.load(get_resource_path(
+            "src/assets/open_pacman.png")
         ).convert_alpha()
-        self.pacman_sprite_closed = pygame.image.load(
-            "src/assets/closed_pacman.png"
+        self.pacman_sprite_closed = pygame.image.load(get_resource_path(
+            "src/assets/closed_pacman.png")
         ).convert_alpha()
         self.pacman_sprites = []
         self.pacman_sprites.append(self.pacman_sprite_open)
         self.pacman_sprites.append(self.pacman_sprite_closed)
         self.current_pacman_sprite = 0
 
-        self.img_pacgum = pygame.image.load(
-            "src/assets/pacgum.png"
+        self.img_pacgum = pygame.image.load(get_resource_path(
+            "src/assets/pacgum.png")
         ).convert_alpha()
-        self.img_super_pacgum = pygame.image.load(
-            "src/assets/super_pacgum.png"
+        self.img_super_pacgum = pygame.image.load(get_resource_path(
+            "src/assets/super_pacgum.png")
         ).convert_alpha()
         self.life_icon = pygame.transform.scale(
             self.pacman_sprite_open,
@@ -129,7 +131,8 @@ class RunningScene(Scene):
         self.ghosts = [blinky, pinky, inky, clyde]
 
         for ghost in self.ghosts:
-            ghost.image = pygame.image.load(ghost.sprite).convert_alpha()
+            ghost.image = pygame.image.load(get_resource_path
+                                            (ghost.sprite)).convert_alpha()
 
     def _build_pacman(self) -> PacMan:
         """Create Pac-Man from the config.
@@ -276,7 +279,8 @@ class RunningScene(Scene):
 
         ghost_size = max(2, c - self.GHOST_MARGIN)
         for ghost in self.ghosts:
-            raw = pygame.image.load(ghost.sprite).convert_alpha()
+            raw = pygame.image.load(get_resource_path
+                                    (ghost.sprite)).convert_alpha()
             ghost.image = pygame.transform.smoothscale(
                 raw, (ghost_size, ghost_size)
             )

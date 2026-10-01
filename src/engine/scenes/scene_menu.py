@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 import pygame
+from src.utils import get_resource_path
 
 from src.engine.scenes.scene_baseclass import Scene
 from src.engine.scenes.scene_running import RunningScene
@@ -21,7 +22,8 @@ class MenuScene(Scene):
         self.cursor_pos_index = 0
         self._init_fixed()
         self.param_choice = 0
-        self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
+        chemin_police = get_resource_path("src/assets/sonicfont.ttf")
+        self.font = pygame.font.Font(chemin_police, 48)
 
     def handle_event(self, event: pygame.event.Event) -> None:
         """Move the cursor with the arrows and open the selected entry.
@@ -75,7 +77,8 @@ class MenuScene(Scene):
         Args:
             surface: Surface to draw on.
         """
-        self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
+        chemin_police = get_resource_path("src/assets/sonicfont.ttf")
+        self.font = pygame.font.Font(chemin_police, 48)
         surface.fill((0, 0, 0))
 
         surface.blit(self.title, self.title_pos)
@@ -87,9 +90,10 @@ class MenuScene(Scene):
 
     def _init_fixed(self) -> None:
         """Load the images and render the texts that never change."""
-        self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
-        self.title = pygame.image.load(
-            "src/assets/screentitle.png"
+        chemin_police = get_resource_path("src/assets/sonicfont.ttf")
+        self.font = pygame.font.Font(chemin_police, 48)
+        self.title = pygame.image.load(get_resource_path(
+            "src/assets/screentitle.png")
         ).convert_alpha()
         self.title = pygame.transform.scale(
             self.title,
@@ -98,8 +102,8 @@ class MenuScene(Scene):
                 int(self.title.get_height() * 0.3),
             ),
         )
-        self.cursor = pygame.image.load(
-            "src/assets/cursor.png"
+        self.cursor = pygame.image.load(get_resource_path(
+            "src/assets/cursor.png")
         ).convert_alpha()
         self.cursor = pygame.transform.scale(
             self.cursor,

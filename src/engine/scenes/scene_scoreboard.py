@@ -4,6 +4,7 @@ from pydantic import ValidationError
 import json
 from src.engine.scenes.scene_baseclass import Scene
 from src.models.scoreboard_models import Score
+from src.utils import get_resource_path
 
 if TYPE_CHECKING:
     from src.engine.engine import Engine
@@ -22,8 +23,9 @@ class ScoreBoard(Scene):
             engine: Game engine owning the scenes.
         """
         super().__init__(engine)
-        self.font = pygame.font.Font("src/assets/sonicfont.ttf", 20)
-        self.font_title = pygame.font.Font(None, 70)
+        chemin_police = get_resource_path("src/assets/sonicfont.ttf")
+        self.font = pygame.font.Font(chemin_police, 36)
+        self.font_title = pygame.font.Font(chemin_police, 70)
         self.scores: dict = {}
         self.loadscores()
         self.title_score_text = self.font_title.render(

@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 import pygame
+from src.utils import get_resource_path
 from src.engine.scenes.scene_baseclass import Scene
 
 if TYPE_CHECKING:
@@ -16,8 +17,9 @@ class PauseScene(Scene):
             engine: Game engine owning the scenes.
         """
         super().__init__(engine)
-        self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
-        self.text_font = pygame.font.Font("src/assets/sonicfont.ttf", 26)
+        chemin_police = get_resource_path("src/assets/sonicfont.ttf")
+        self.font = pygame.font.Font(chemin_police, 48)
+        self.text_font = pygame.font.Font(chemin_police, 26)
 
         self.title_surface = self.font.render("PAUSED",
                                               True, (255, 255, 0))
@@ -54,7 +56,8 @@ class PauseScene(Scene):
         Args:
             surface: Surface to draw on.
         """
-        self.font = pygame.font.Font("src/assets/sonicfont.ttf", 48)
+        chemin_police = get_resource_path("src/assets/sonicfont.ttf")
+        self.font = pygame.font.Font(chemin_police, 48)
         if self.background_snapshot:
             surface.blit(self.background_snapshot, (0, 0))
 
