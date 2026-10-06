@@ -1,8 +1,6 @@
 import json
 from pathlib import Path
 import pygame
-import sys
-import os
 
 from src.models import Config, PointsConfig, LevelConfig, PacManConfig
 from src.engine.scenes.scene_menu import MenuScene
@@ -34,12 +32,12 @@ class Engine:
     DEFAULT_PACMAN = {
         "dir": "right",
         "next_dir": "right",
-        "sprite": "src/assets/pacman.png",
     }
+    FIRST_LEVEL_SEED = 42
     MIN_MAZE_SIZE = 3
     MAX_MAZE_SIZE = 60
 
-    def __init__(self, config_file: str):
+    def __init__(self, config_file: Path):
         """Open the window, load the config and create every scene.
 
         Args:
@@ -47,6 +45,7 @@ class Engine:
 
         Raises:
             ConfigFileError: If the config file cannot be read.
+            MazeGenerationError: If the first maze cannot be generated.
         """
         pygame.init()
         self.screen = pygame.display.set_mode((800, 900))
@@ -68,36 +67,32 @@ class Engine:
         }
         self._next_scene: Scene | None = None
 
-    @staticmethod
-    def get_resource_path(relative_path: str) -> str:
-        if hasattr(sys, '_MEIPASS'):
-            return os.path.join(sys._MEIPASS, relative_path)
-        return os.path.join(os.path.abspath("."), relative_path)
-
     def run(self) -> None:
         """Run the game loop until the player quits.
 
         Each frame dispatches the events, updates and draws the current
-        scene, then applies any pending scene change.
+        scene, then applies any pending scene change. The window is
+        always closed, even if an error stops the loop.
         """
-        while self.running:
-            dt = self.clock.tick(60) / 1000.0
+        try:
+            while self.running:
+                dt = self.clock.tick(60) / 1000.0
 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                else:
-                    self.scene.handle_event(event)
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.running = False
+                    else:
+                        self.scene.handle_event(event)
 
-            self.scene.update(dt)
-            self.scene.draw(self.screen)
-            pygame.display.flip()
+                self.scene.update(dt)
+                self.scene.draw(self.screen)
+                pygame.display.flip()
 
-            if self._next_scene is not None:
-                self.scene = self._next_scene
-                self._next_scene = None
-
-        pygame.quit()
+                if self._next_scene is not None:
+                    self.scene = self._next_scene
+                    self._next_scene = None
+        finally:
+            pygame.quit()
 
     def change_scene(self, scene: Scene) -> None:
         """Switch to another scene at the end of the current frame.
@@ -160,11 +155,12 @@ class Engine:
             return maximum
         return int(value)
 
-    def _read_options(self, config_file: str) -> dict:
+    def _read_options(self, config_file: Path) -> dict:
         """Read the config file, skipping lines that start with ``#``.
 
         Args:
-            config_file: Path of the config file.
+            config_file: Path of the config file, as given on the
+                command line.
 
         Returns:
             The parsed top-level JSON object.
@@ -174,8 +170,7 @@ class Engine:
                 JSON or is not a JSON object.
         """
         try:
-            config_path = self.get_resource_path(config_file)
-            with open(config_path, "r") as file:
+            with config_file.open("r") as file:
                 text = "".join(
                     line for line in file if not line.lstrip().startswith("#")
                 )
@@ -241,6 +236,9 @@ class Engine:
     def _build_levels(self, options: dict) -> list[LevelConfig]:
         """Build the list of levels from ``levels``.
 
+        The first level defaults to a fixed seed so its maze is always
+        the same; the other levels default to a random maze.
+
         Args:
             options: Parsed config file.
 
@@ -295,10 +293,10 @@ class Engine:
                     seed=self._get_int(
                         raw,
                         "seed",
-                        0,
+                        self.FIRST_LEVEL_SEED if index == 0 else 0,
                         minimum=0,
                         where=where,
-                        quiet=True,
+                        quiet=index != 0,
                     ),
                 )
             )
@@ -311,25 +309,18 @@ class Engine:
             options: Parsed config file.
 
         Returns:
-            Pac-Man's settings, with the default sprite if invalid.
+            Pac-Man's settings.
         """
         raw = options.get("pacman")
         if not isinstance(raw, dict):
             self._warn("missing or invalid 'pacman', using defaults")
-            raw = {}
-
-        sprite = raw.get("sprite")
-        if not isinstance(sprite, str):
-            sprite = self.DEFAULT_PACMAN["sprite"]
-            self._warn(f"pacman: invalid 'sprite', using {sprite}")
 
         return PacManConfig(
             dir=self.DEFAULT_PACMAN["dir"],
             next_dir=self.DEFAULT_PACMAN["next_dir"],
-            sprite=Path(sprite),
         )
 
-    def load_conf(self, config_file: str) -> None:
+    def load_conf(self, config_file: Path) -> None:
         """Load the config file into ``self.config``.
 
         Args:

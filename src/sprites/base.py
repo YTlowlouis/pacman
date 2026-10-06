@@ -17,19 +17,6 @@ class GameObject:
         self.visible = visible
         self.sprite = sprite
 
-    def _switch_texture(self, active: bool) -> None:
-        """Hook to change the texture; does nothing by default.
-
-        Args:
-            active: Whether the active texture should be shown.
-        """
-        pass
-
-    def disappear(self) -> None:
-        """Switch off the texture if the object is no longer visible."""
-        if not self.visible:
-            self._switch_texture(False)
-
 
 class Sprite:
     """Base class of moving characters (Pac-Man and ghosts).
@@ -84,18 +71,3 @@ class Sprite:
         self.super_power = super_power
         self.target = target
         self.progress = progress
-
-    def _switch_texture(self, active: bool) -> None:
-        """Hook to change the texture; does nothing by default.
-
-        Args:
-            active: Whether the active texture should be shown.
-        """
-        pass
-
-    def disappear(self) -> None:
-        """Hide the character once it is dead."""
-        if not self.alive:
-            self.visible = False
-        if not self.visible:
-            self._switch_texture(False)

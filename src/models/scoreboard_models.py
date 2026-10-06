@@ -23,7 +23,7 @@ class Score(BaseModel):
                 than 10 characters.
         """
         for i in name:
-            if not i.isalnum() and i != " ":
+            if not (i.isascii() and i.isalnum()) and i != " ":
                 raise ValueError(f"Invalid name: {name}")
         if len(name) > 10:
             raise ValueError(f"Invalid name: {name}, max 10 characters")

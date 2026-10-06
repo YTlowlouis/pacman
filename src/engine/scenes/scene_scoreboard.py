@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class ScoreBoard(Scene):
     """Highscore screen; also loads and saves the top 10 scores."""
 
-    SCORE_FILE = "scores.json"
+    SCORE_FILE = get_resource_path("scores.json")
     TOP = 10
 
     def __init__(self, engine: "Engine") -> None:
@@ -113,7 +113,7 @@ class ScoreBoard(Scene):
             missing, unreadable, not valid JSON or not an object.
         """
         try:
-            with open(self.SCORE_FILE, "r") as f:
+            with self.SCORE_FILE.open("r") as f:
                 text = f.read()
         except FileNotFoundError:
             print(f"{self.SCORE_FILE} doesn't exist, starting with no score")
@@ -147,22 +147,21 @@ class ScoreBoard(Scene):
     def savescore(self, score: Score) -> None:
         """Record a score, keep the top 10 and write them to the file.
 
-        A player only keeps their best score. If the file cannot be
-        written, the scores are kept for this session only.
+        A player only keeps their latest score: it replaces the old one,
+        even if it is lower. If the file cannot be written, the scores
+        are kept for this session only.
 
         Args:
             score: Score to record.
         """
-        self.scores[score.name] = max(
-            score.score, self.scores.get(score.name, 0)
-        )
+        self.scores[score.name] = score.score
         self.scores = dict(
             sorted(self.scores.items(), key=lambda i: i[1], reverse=True)[
                 : self.TOP
             ]
         )
         try:
-            with open(self.SCORE_FILE, "w") as f:
+            with self.SCORE_FILE.open("w") as f:
                 json.dump(self.scores, f, indent=2)
         except OSError as e:
             print(f"Can't save {self.SCORE_FILE} ({e}), "

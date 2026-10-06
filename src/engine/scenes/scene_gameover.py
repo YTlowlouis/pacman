@@ -39,7 +39,6 @@ class GameOverScene(Scene):
 
         self.entering_name = False
         self.player_name = ""
-        self.error_message = ""
         self.caret_timer = 0.0
         self.final_score = 0
         self.scores: dict[str, int] = {}
@@ -97,14 +96,6 @@ class GameOverScene(Scene):
                 prompt,
                 (surface.get_width() // 2 - prompt.get_width() // 2, 700),
             )
-            if self.error_message:
-                error_surf = self.font_scores.render(self.error_message, True,
-                                                     (255, 0, 0))
-                surface.blit(
-                    error_surf,
-                    (surface.get_width() // 2 - error_surf.get_width()
-                     // 2, 750),
-                )
         else:
             self._draw_scores(surface)
 
@@ -117,15 +108,13 @@ class GameOverScene(Scene):
             event: Pygame event to handle.
         """
         if event.type == pygame.TEXTINPUT:
-            self.error_message = ""
             for char in event.text:
                 if len(self.player_name) >= self.NAME_MAX:
                     break
-                if char.isalnum() or char == " ":
+                if (char.isascii() and char.isalnum()) or char == " ":
                     self.player_name += char
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSPACE:
-                self.error_message = ""
                 self.player_name = self.player_name[:-1]
             elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                 self._validate_name()
@@ -133,12 +122,10 @@ class GameOverScene(Scene):
     def _validate_name(self) -> None:
         """Save the score under the typed name.
 
-        An empty or invalid name is replaced by 'player'.
+        An empty or invalid name is replaced by 'player'. A name that
+        is already in the highscores gets its new score.
         """
         name = self.player_name.strip() or "player"
-        if name in self.scores:
-            self.error_message = "Name already taken!"
-            return
         try:
             score = Score(name=name, score=self.final_score)
         except ValidationError:

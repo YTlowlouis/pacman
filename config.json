@@ -67,8 +67,7 @@
 
 	"pacman": {
 		"dir": "right",
-		"next_dir": "right",
-		"sprite": "src/assets/pacman.png"
+		"next_dir": "right"
 	},
 
 	"points_per": {

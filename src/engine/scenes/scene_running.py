@@ -14,11 +14,14 @@ from src.engine.scenes.scene_pause import PauseScene
 from src.engine.scenes.scene_gameover import GameOverScene
 from src.utils import get_resource_path
 
-""" from src.sprites.ghost import Ghost
-from src.sprites.sprites import Blinky, Pinky, Inky, Clyde """
-
 if TYPE_CHECKING:
     from src.engine.engine import Engine
+
+
+class MazeGenerationError(Exception):
+    """Raised when the A-Maze-ing package cannot build a usable maze."""
+
+    pass
 
 
 class RunningScene(Scene):
@@ -103,6 +106,9 @@ class RunningScene(Scene):
         self.ghosts: list[Ghost] = []
         self.ghost_offset = 0
 
+        self.pacgums: list[list[GameObject]] = []
+        self.remaining_gums = 0
+
         self.fade_veil = pygame.Surface(self.engine.screen.get_size())
         self.fade_veil.fill(self.BG_COLOR)
         self.fade_alpha = 0.0
@@ -154,7 +160,7 @@ class RunningScene(Scene):
             next_dir=conf.next_dir,
             respawn_coord=(0, 0),
             super_power=False,
-            sprite=conf.sprite,
+            sprite=get_resource_path("src/assets/open_pacman.png"),
             target=(0, 0),
             progress=0.0,
         )
@@ -607,6 +613,9 @@ class RunningScene(Scene):
 
         Args:
             index: Index of the level in the config.
+
+        Raises:
+            MazeGenerationError: If no maze can be generated.
         """
         if index >= len(self.engine.config.levels):
             self._end_game(True)
@@ -614,9 +623,16 @@ class RunningScene(Scene):
         conf = self.engine.config.levels[index]
         self.level_index = index
 
-        self.maze = MazeGenerator(
-            size=(conf.width, conf.height), perfect=False, seed=conf.seed
-        )
+        try:
+            self.maze = MazeGenerator(
+                size=(conf.width, conf.height), perfect=False, seed=conf.seed
+            )
+        except Exception as e:
+            # The package is external: any error must be caught.
+            raise MazeGenerationError(
+                f"Error: could not generate the maze of level {conf.id}: "
+                f"{type(e).__name__}: {e}"
+            )
         self.start_pos = self._find_start_cell()
         self.layer = None
         self._init_ghost()

@@ -33,7 +33,7 @@ class WaveManager:
         if any(g.state == GhostState.FRIGHTENED for g in ghosts):
             return
 
-        current_wave_state, wave_duration = self.waves[self.current_wave_index]
+        _, wave_duration = self.waves[self.current_wave_index]
         self.timer += dt
 
         if self.timer >= wave_duration:

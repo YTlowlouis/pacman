@@ -1,4 +1,3 @@
-from pathlib import Path
 from pydantic import BaseModel, Field
 
 
@@ -24,11 +23,10 @@ class LevelConfig(BaseModel):
 
 
 class PacManConfig(BaseModel):
-    """Pac-Man's start directions and sprite path."""
+    """Pac-Man's start directions."""
 
     dir: str
     next_dir: str
-    sprite: Path
 
 
 class Config(BaseModel):

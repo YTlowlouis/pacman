@@ -5,7 +5,7 @@ run:
 	uv run pacman.py config.json
 
 debug:
-	echo debug
+	uv run python -m pdb pacman.py config.json
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
@@ -17,5 +17,5 @@ lint:
 	mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 lint-strict:
-	flake8 .
+	flake8 . --exclude=.venv
 	mypy . --strict

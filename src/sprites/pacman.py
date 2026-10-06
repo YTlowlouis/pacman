@@ -54,7 +54,6 @@ class PacMan(Sprite):
         )
         self.target: tuple[int, int] = target
         self.points: int = 0
-        self.VALID_DIRECTIONS = {"up", "down", "right", "left"}
 
         if self.lives <= 0:
             self.alive = False
